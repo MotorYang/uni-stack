@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: system
+
+  # JDK 21 虚拟线程优化
+  threads:
+    virtual:
+      enabled: true
+
+  cloud:
+    nacos:
+      username: uni-stack
+      password: 745700Yxy@
+      discovery:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+      config:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        file-extension: yaml
+
+  config:
+    import:
+      - nacos:system.yaml?group=DEFAULT_GROUP&refreshEnabled=true

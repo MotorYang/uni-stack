@@ -1,0 +1,52 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth
+  # JDK 21 虚拟线程优化
+  threads:
+    virtual:
+      enabled: true
+
+  cloud:
+    nacos:
+      username: uni-stack
+      password: 745700Yxy@
+      discovery:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+      config:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        file-extension: yaml
+
+  config:
+    import:
+      - nacos:auth.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+      circuitbreaker:
+        enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+# JWT 配置
+auth:
+  jwt:
+    secret: ${JWT_SECRET:UniStackSecretKeyForJwtTokenMustBeAtLeast256Bits!}
+    access-token-expire: 7200000    # 2 小时
+    refresh-token-expire: 604800000 # 7 天
+
+logging:
+  level:
+    com.github.motoryang.auth: DEBUG

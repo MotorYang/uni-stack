@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.motoryang.system.modules.user.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.github.motoryang.system.modules.user.entity.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="avatar" column="avatar"/>
+        <result property="gender" column="gender"/>
+        <result property="status" column="status"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+    <!-- 分页查询用户 -->
+    <select id="selectUserPage" resultMap="UserResultMap">
+        SELECT u.*, d.dept_name
+        FROM sys_user u
+        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        <where>
+            u.deleted = 0
+            <if test="user.username != null and user.username != ''">
+                AND u.username LIKE CONCAT('%', #{user.username}, '%')
+            </if>
+            <if test="user.nickname != null and user.nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{user.nickname}, '%')
+            </if>
+            <if test="user.phone != null and user.phone != ''">
+                AND u.phone LIKE CONCAT('%', #{user.phone}, '%')
+            </if>
+            <if test="user.status != null">
+                AND u.status = #{user.status}
+            </if>
+            <if test="user.deptId != null">
+                AND u.dept_id = #{user.deptId}
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
+    <!-- 根据ID查询用户详情 -->
+    <select id="selectUserById" resultMap="UserResultMap">
+        SELECT u.*, d.dept_name
+        FROM sys_user u
+        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        WHERE u.id = #{id} AND u.deleted = 0
+    </select>
+
+</mapper>

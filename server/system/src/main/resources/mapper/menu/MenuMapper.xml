@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.motoryang.system.modules.menu.mapper.MenuMapper">
+
+    <!-- 根据用户ID查询菜单（仅目录和菜单，不含按钮） -->
+    <select id="selectMenusByUserId" resultType="com.github.motoryang.system.modules.menu.entity.Menu">
+        SELECT DISTINCT m.*
+        FROM sys_menu m
+        INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
+        INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+          AND m.menu_type IN ('M', 'C')
+          AND m.status = 0
+          AND m.visible = 0
+          AND m.deleted = 0
+        ORDER BY m.sort, m.id
+    </select>
+
+    <!-- 查询所有菜单 -->
+    <select id="selectAllMenus" resultType="com.github.motoryang.system.modules.menu.entity.Menu">
+        SELECT *
+        FROM sys_menu
+        WHERE status = 0
+          AND deleted = 0
+        ORDER BY sort, id
+    </select>
+
+</mapper>
