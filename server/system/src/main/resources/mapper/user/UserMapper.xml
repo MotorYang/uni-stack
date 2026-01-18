@@ -47,6 +47,25 @@
         ORDER BY u.create_time DESC
     </select>
 
+    <!-- 分页查询指定角色下的用户 -->
+    <select id="selectUsersByRoleId" resultMap="UserResultMap">
+        SELECT u.*, d.dept_name
+        FROM sys_user u
+        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        INNER JOIN sys_user_role ur ON u.id = ur.user_id
+        <where>
+            u.deleted = 0
+            AND ur.role_id = #{roleId}
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
     <!-- 根据ID查询用户详情 -->
     <select id="selectUserById" resultMap="UserResultMap">
         SELECT u.*, d.dept_name

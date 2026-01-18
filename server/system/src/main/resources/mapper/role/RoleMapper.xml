@@ -26,4 +26,14 @@
         ORDER BY r.sort
     </select>
 
+    <!-- 查询角色下的所有用户 -->
+    <select id="selectUsersByRoleId" resultType="com.github.motoryang.system.modules.user.entity.User">
+        SELECT u.*
+        FROM sys_user u
+                 INNER JOIN sys_user_role ur ON u.id = ur.user_id
+        WHERE ur.role_id = #{roleId}
+          and ur.deleted = 0
+          and u.deleted = 0;
+    </select>
+
 </mapper>

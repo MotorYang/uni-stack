@@ -31,6 +31,21 @@ const routes: RouteRecordRaw[] = [
         name: 'UserManage',
         component: () => import('@/views/security/UserManageView.vue'),
       },
+      {
+        path: '/security/dept',
+        name: 'DeptManage',
+        component: () => import('@/views/security/DeptManageView.vue'),
+      },
+      {
+        path: '/security/role',
+        name: 'RoleManage',
+        component: () => import('@/views/security/RoleManageView.vue'),
+      },
+      {
+        path: '/security/menu',
+        name: 'MenuManage',
+        component: () => import('@/views/security/MenuManageView.vue'),
+      },
       // Catch-all route for undefined paths within the layout
       {
         path: ':pathMatch(.*)*',

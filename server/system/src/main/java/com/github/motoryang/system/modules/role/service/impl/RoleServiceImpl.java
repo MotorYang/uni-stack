@@ -7,15 +7,22 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.system.modules.relation.entity.RoleMenu;
 import com.github.motoryang.system.modules.relation.mapper.RoleMenuMapper;
+import com.github.motoryang.system.modules.relation.entity.UserRole;
+import com.github.motoryang.system.modules.relation.mapper.UserRoleMapper;
 import com.github.motoryang.system.modules.role.converter.RoleConverter;
 import com.github.motoryang.system.modules.role.entity.Role;
 import com.github.motoryang.system.modules.role.mapper.RoleMapper;
 import com.github.motoryang.system.modules.role.model.dto.RoleCreateDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleQueryDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleUpdateDTO;
+import com.github.motoryang.system.modules.role.model.dto.RoleUserQueryDTO;
 import com.github.motoryang.system.modules.role.model.vo.RoleDetailVO;
 import com.github.motoryang.system.modules.role.model.vo.RoleVO;
 import com.github.motoryang.system.modules.role.service.IRoleService;
+import com.github.motoryang.system.modules.user.converter.UserConverter;
+import com.github.motoryang.system.modules.user.entity.User;
+import com.github.motoryang.system.modules.user.mapper.UserMapper;
+import com.github.motoryang.system.modules.user.model.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +40,9 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
 
     private final RoleConverter roleConverter;
     private final RoleMenuMapper roleMenuMapper;
+    private final UserMapper userMapper;
+    private final UserConverter userConverter;
+    private final UserRoleMapper userRoleMapper;
 
     @Override
     public IPage<RoleVO> pageQuery(RoleQueryDTO dto) {
@@ -148,6 +158,54 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
     public boolean existsByRoleKey(String roleKey) {
         return count(new LambdaQueryWrapper<Role>()
                 .eq(Role::getRoleKey, roleKey)) > 0;
+    }
+
+    @Override
+    public IPage<UserVO> pageUserByRoleId(RoleUserQueryDTO dto) {
+        Page<User> page = new Page<>(dto.current(), dto.size());
+
+        IPage<User> userPage = userMapper.selectUsersByRoleId(
+                page,
+                dto.roleId(),
+                dto.username(),
+                dto.nickname()
+        );
+
+        Page<UserVO> voPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        voPage.setRecords(userConverter.toVOList(userPage.getRecords()));
+        return voPage;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addUsersToRole(String roleId, List<String> userIds) {
+        if (CollectionUtils.isEmpty(userIds)) {
+            return;
+        }
+        List<UserRole> userRoles = userIds.stream()
+                .map(userId -> {
+                    UserRole ur = new UserRole();
+                    ur.setUserId(userId);
+                    ur.setRoleId(roleId);
+                    return ur;
+                })
+                .toList();
+        userRoleMapper.insertBatch(userRoles);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeUserFromRole(String roleId, String userId) {
+        userRoleMapper.deleteByRoleIdAndUserId(roleId, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeUsersFromRole(String roleId, List<String> userIds) {
+        if (CollectionUtils.isEmpty(userIds)) {
+            return;
+        }
+        userIds.forEach(userId -> userRoleMapper.deleteByRoleIdAndUserId(roleId, userId));
     }
 
     private void saveRoleMenus(String roleId, List<String> menuIds) {

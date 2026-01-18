@@ -5,9 +5,11 @@ import com.github.motoryang.common.core.result.RestResult;
 import com.github.motoryang.system.modules.role.model.dto.RoleCreateDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleQueryDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleUpdateDTO;
+import com.github.motoryang.system.modules.role.model.dto.RoleUserQueryDTO;
 import com.github.motoryang.system.modules.role.model.vo.RoleDetailVO;
 import com.github.motoryang.system.modules.role.model.vo.RoleVO;
 import com.github.motoryang.system.modules.role.service.IRoleService;
+import com.github.motoryang.system.modules.user.model.vo.UserVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +72,39 @@ public class RoleController {
     @DeleteMapping("/{id}")
     public RestResult<Void> delete(@PathVariable String id) {
         roleService.deleteRole(id);
+        return RestResult.ok();
+    }
+
+    /**
+     * 获取特定角色下的所有用户
+     */
+    @GetMapping("/{roleId}/users")
+    public RestResult<IPage<UserVO>> getUsers(@PathVariable String roleId, RoleUserQueryDTO dto) {
+        RoleUserQueryDTO queryDTO = new RoleUserQueryDTO(
+                roleId,
+                dto.username(),
+                dto.nickname(),
+                dto.current(),
+                dto.size()
+        );
+        return RestResult.ok(roleService.pageUserByRoleId(queryDTO));
+    }
+
+    @PostMapping("/{roleId}/users")
+    public RestResult<Void> addUsers(@PathVariable String roleId, @RequestBody List<String> userIds) {
+        roleService.addUsersToRole(roleId, userIds);
+        return RestResult.ok();
+    }
+
+    @DeleteMapping("/{roleId}/users/{userId}")
+    public RestResult<Void> removeUser(@PathVariable String roleId, @PathVariable String userId) {
+        roleService.removeUserFromRole(roleId, userId);
+        return RestResult.ok();
+    }
+
+    @DeleteMapping("/{roleId}/users")
+    public RestResult<Void> removeUsers(@PathVariable String roleId, @RequestBody List<String> userIds) {
+        roleService.removeUsersFromRole(roleId, userIds);
         return RestResult.ok();
     }
 }

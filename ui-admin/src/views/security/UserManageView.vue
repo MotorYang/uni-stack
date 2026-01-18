@@ -1,7 +1,7 @@
 <template>
   <div class="p-6 space-y-6 animate-enter">
     <!-- 搜索区域 -->
-    <div class="glass-card !p-5">
+    <div class="glass-card !p-5" style="margin-bottom: 0">
       <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
         <n-form-item label="用户名" :show-feedback="false">
           <n-input v-model:value="queryParams.username" placeholder="请输入用户名" clearable class="!w-40" />
@@ -77,6 +77,9 @@
       preset="card"
       style="width: 600px"
       :mask-closable="false"
+      display-directive="show"
+      :auto-focus="false"
+      :trap-focus="false"
     >
       <n-form
         ref="formRef"
@@ -108,6 +111,26 @@
         </n-form-item>
         <n-form-item label="手机号" path="phone">
           <n-input v-model:value="formData.phone" placeholder="请输入手机号" />
+        </n-form-item>
+        <n-form-item label="头像">
+          <div class="flex items-center gap-4">
+            <n-avatar
+              round
+              :size="40"
+              :src="formData.avatar || undefined"
+              :fallback-src="'https://ui-avatars.com/api/?name=' + (formData.nickname || formData.username)"
+            />
+            <div>
+              <n-button size="small" @click="triggerAvatarUpload">上传头像</n-button>
+              <input
+                ref="avatarInputRef"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
+            </div>
+          </div>
         </n-form-item>
         <n-form-item label="性别" path="gender">
           <n-radio-group v-model:value="formData.gender">
@@ -144,6 +167,9 @@
       preset="card"
       style="width: 400px"
       :mask-closable="false"
+      display-directive="show"
+      :auto-focus="false"
+      :trap-focus="false"
     >
       <n-form
         ref="resetPwdFormRef"
@@ -215,6 +241,7 @@ import {
   type UserCreateDTO,
   type UserUpdateDTO
 } from '@/api/user'
+import { uploadAvatar } from '@/api/storage'
 
 const message = useMessage()
 
@@ -348,6 +375,7 @@ const modalTitle = computed(() => isEdit.value ? '编辑用户' : '新增用户'
 const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 const editingUserId = ref<string>('')
+const avatarInputRef = ref<HTMLInputElement | null>(null)
 
 const formData = reactive<UserCreateDTO & UserUpdateDTO>({
   username: '',
@@ -355,6 +383,7 @@ const formData = reactive<UserCreateDTO & UserUpdateDTO>({
   nickname: '',
   email: '',
   phone: '',
+  avatar: '',
   gender: 0,
   status: 0
 })
@@ -455,6 +484,7 @@ const handleAdd = () => {
     nickname: '',
     email: '',
     phone: '',
+    avatar: '',
     gender: 0,
     status: 0
   })
@@ -471,10 +501,41 @@ const handleEdit = (row: UserVO) => {
     nickname: row.nickname || '',
     email: row.email || '',
     phone: row.phone || '',
+    avatar: row.avatar || '',
     gender: row.gender,
     status: row.status
   })
   showModal.value = true
+}
+
+const triggerAvatarUpload = () => {
+  avatarInputRef.value?.click()
+}
+
+const handleAvatarChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    message.error('请选择图片文件')
+    return
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    message.error('图片大小不能超过 2MB')
+    return
+  }
+
+  try {
+    const result = await uploadAvatar(file)
+    formData.avatar = result.url
+    message.success('头像上传成功')
+  } catch (error) {
+    message.error('头像上传失败')
+  } finally {
+    input.value = ''
+  }
 }
 
 // 提交表单
@@ -493,6 +554,7 @@ const handleSubmit = async () => {
         nickname: formData.nickname,
         email: formData.email,
         phone: formData.phone,
+        avatar: formData.avatar,
         gender: formData.gender,
         status: formData.status
       }
@@ -505,12 +567,12 @@ const handleSubmit = async () => {
         nickname: formData.nickname,
         email: formData.email,
         phone: formData.phone,
-        gender: formData.gender
+        gender: formData.gender,
+        avatar: formData.avatar
       }
       await createUser(createData)
       message.success('创建成功')
     }
-    showModal.value = false
     loadUserList()
   } catch (error) {
     message.error(isEdit.value ? '更新失败' : '创建失败')

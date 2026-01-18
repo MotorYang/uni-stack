@@ -6,8 +6,10 @@ import com.github.motoryang.system.modules.role.entity.Role;
 import com.github.motoryang.system.modules.role.model.dto.RoleCreateDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleQueryDTO;
 import com.github.motoryang.system.modules.role.model.dto.RoleUpdateDTO;
+import com.github.motoryang.system.modules.role.model.dto.RoleUserQueryDTO;
 import com.github.motoryang.system.modules.role.model.vo.RoleDetailVO;
 import com.github.motoryang.system.modules.role.model.vo.RoleVO;
+import com.github.motoryang.system.modules.user.model.vo.UserVO;
 
 import java.util.List;
 
@@ -41,4 +43,15 @@ public interface IRoleService extends IService<Role> {
      * 检查角色Key是否存在
      */
     boolean existsByRoleKey(String roleKey);
+
+    /**
+     * 根据角色id分页查询用户
+     */
+    IPage<UserVO> pageUserByRoleId(RoleUserQueryDTO dto);
+
+    void addUsersToRole(String roleId, List<String> userIds);
+
+    void removeUserFromRole(String roleId, String userId);
+
+    void removeUsersFromRole(String roleId, List<String> userIds);
 }

@@ -17,5 +17,13 @@ public interface UserMapper extends BaseMapper<User> {
      */
     IPage<User> selectUserPage(IPage<User> page, @Param("user") User user);
 
+    /**
+     * 分页查询指定角色下的用户
+     */
+    IPage<User> selectUsersByRoleId(IPage<User> page,
+                                    @Param("roleId") String roleId,
+                                    @Param("username") String username,
+                                    @Param("nickname") String nickname);
+
     User selectUserById(@Param("id") String id);
 }

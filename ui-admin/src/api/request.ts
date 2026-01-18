@@ -24,6 +24,17 @@ service.interceptors.request.use(
   }
 )
 
+// 处理401未授权，退出登录并跳转到登录页
+function handleUnauthorized(msg: string) {
+  const userStore = useUserStore()
+  userStore.logout()
+  message.error(msg || '请先登录')
+  // 使用 setTimeout 确保消息显示后再跳转
+  setTimeout(() => {
+    window.location.href = '/login'
+  }, 300)
+}
+
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data
@@ -31,6 +42,10 @@ service.interceptors.response.use(
     if (res && typeof res.code !== 'undefined') {
       if (res.code === 200) {
         return res.data
+      } else if (res.code === 401) {
+        // 业务层面的401，token过期或未登录
+        handleUnauthorized(res.message)
+        return Promise.reject(new Error(res.message || '请先登录'))
       } else {
         // Business logic error
         message.error(res.message || 'Request failed')
@@ -39,27 +54,25 @@ service.interceptors.response.use(
     }
     return res
   },
-  (error: AxiosError) => {
+  (error: AxiosError<{ code: number; message: string; data: unknown }>) => {
     const { response } = error
     if (response) {
+      const resData = response.data
       switch (response.status) {
         case 401:
-            // 凭证失效，跳转认证中心
-            // Assuming sys-auth is an external URL or a route
-            // For now, we'll log it. In a real app, we might redirect.
-            console.warn('401 Unauthorized - Redirecting to sys-auth')
-            // window.location.href = '/sys-auth' 
+            // HTTP层面的401，凭证失效
+            handleUnauthorized(resData?.message || '请先登录')
             break
         case 403:
-            // 权限不足，Naive UI 弹出警告通知
-            message.warning('权限不足')
+            // 权限不足
+            message.warning(resData?.message || '权限不足')
             break
         case 500:
             // 系统异常
-            notification.error({ title: '系统异常', content: '请稍后重试' })
+            notification.error({ title: '系统异常', content: resData?.message || '请稍后重试' })
             break
         default:
-            message.error(response.statusText || '请求失败')
+            message.error(resData?.message || response.statusText || '请求失败')
       }
     } else {
         message.error('网络错误')

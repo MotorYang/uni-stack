@@ -49,6 +49,7 @@ export interface UserCreateDTO {
   email?: string
   phone?: string
   gender?: number
+  avatar?: string
   deptId?: string
   roleIds?: string[]
 }
