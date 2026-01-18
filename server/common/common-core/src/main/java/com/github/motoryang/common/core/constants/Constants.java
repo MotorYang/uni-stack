@@ -14,6 +14,12 @@ public final class Constants {
     public static final String TOKEN_PREFIX = "Bearer ";
 
     /**
+     * 自定义请求头
+     */
+    public static final String USER_ID_HEADER = "X-User-Id";
+    public static final String USERNAME_HEADER = "X-Username";
+
+    /**
      * Authorization Header
      */
     public static final String AUTHORIZATION_HEADER = "Authorization";

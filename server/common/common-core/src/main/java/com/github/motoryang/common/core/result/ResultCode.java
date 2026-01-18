@@ -29,6 +29,7 @@ public enum ResultCode {
     USER_PASSWORD_ERROR(1002, "用户名或密码错误"),
     USER_DISABLED(1003, "用户已被禁用"),
     USER_LOCKED(1004, "用户已被锁定"),
+    FILE_UPLOAD_ERROR(1005, "文件上传失败"),
 
     // Token相关 2xxx
     TOKEN_INVALID(2001, "Token无效"),

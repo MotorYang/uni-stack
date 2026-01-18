@@ -10,14 +10,14 @@ VALUES
     (@dept_root := UUIDV7(), '0', '0', '总部', 1, '系统', 0, NOW(6));
 
 /* =====================================================
-   2. 用户
+   2. 用户admin，默认密码123456
    ===================================================== */
 INSERT INTO sys_user
 (id, username, password, nickname, status, dept_id, create_time)
 VALUES
     (@user_admin := UUIDV7(),
      'admin',
-     '$2a$10$abcdefghijklmnopqrstuvwxyz0123456789',
+     '$2a$10$aS8CsbwlTto/BqiBl5M.oepC6AimQeSrKNfXnRzczlcI9Ah.HBhOG',
      '超级管理员',
      0,
      @dept_root,
