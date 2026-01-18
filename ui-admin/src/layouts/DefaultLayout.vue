@@ -34,7 +34,7 @@
           <div class="glass-card-sm flex items-center gap-3 p-3 cursor-pointer hover:bg-white/40 dark:hover:bg-white/10 transition-colors duration-300" :class="{ 'justify-center !p-2': collapsed }">
             <n-avatar round size="small" :src="userStore.userInfo?.avatar || 'https://ui-avatars.com/api/?name=User&background=random'" />
             <div class="flex flex-col" v-show="!collapsed">
-              <span class="text-sm font-semibold text-text-main">{{ userStore.userInfo?.nickName || 'User' }}</span>
+              <span class="text-sm font-semibold text-text-main">{{ userStore.userInfo?.nickname || 'User' }}</span>
               <span class="text-xs text-text-sec">{{ userStore.userInfo?.email || 'email@example.com' }}</span>
             </div>
           </div>
@@ -115,7 +115,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
-import { getMenuList, type Menu } from '@/api/menu'
+import { getUserMenuTree, type MenuVO } from '@/api/menu'
+import { getUserIdFromToken } from '@/utils/jwt'
 import * as Ionicons from '@vicons/ionicons5'
 import { 
   Layers, 
@@ -155,24 +156,26 @@ const userMenuOptions: DropdownOption[] = [
   }
 ]
 
-function transformMenu(menus: Menu[]): MenuOption[] {
-  return menus.map(item => {
-    const option: MenuOption = {
-      label: item.label,
-      key: item.key,
-      path: item.path // Add path to option
-    }
-    if (item.icon) {
-      const iconComp = getIconByName(item.icon)
-      if (iconComp) {
-        option.icon = renderIcon(iconComp)
+function transformMenu(menus: MenuVO[]): MenuOption[] {
+  return menus
+    .filter(item => item.menuType !== 'B' && item.visible === 0 && item.status === 0)
+    .map(item => {
+      const option: MenuOption = {
+        label: item.menuName,
+        key: item.path || item.id,
+        path: item.path
       }
-    }
-    if (item.children) {
-      option.children = transformMenu(item.children)
-    }
-    return option
-  })
+      if (item.icon) {
+        const iconComp = getIconByName(item.icon)
+        if (iconComp) {
+          option.icon = renderIcon(iconComp)
+        }
+      }
+      if (item.children && item.children.length > 0) {
+        option.children = transformMenu(item.children)
+      }
+      return option
+    })
 }
 
 onMounted(async () => {
@@ -185,10 +188,22 @@ onMounted(async () => {
     }
   }
 
+  // Load user menu
+  const token = userStore.token
+  if (!token) {
+    console.error('No token available')
+    return
+  }
+  const userId = getUserIdFromToken(token)
+  if (!userId) {
+    console.error('Failed to get userId from token')
+    return
+  }
+
   try {
-    const res = await getMenuList()
+    const res = await getUserMenuTree(userId)
     menuOptions.value = transformMenu(res)
-    
+
     // Default expand the first menu item if it has children
     if (menuOptions.value.length > 0) {
       const firstItem = menuOptions.value[0]
@@ -220,13 +235,13 @@ function handleUpdateValue(key: string, item: MenuOption) {
   }
 }
 
-function handleUserMenuSelect(key: string) {
+async function handleUserMenuSelect(key: string) {
   if (key === 'profile') {
     router.push('/profile')
     return
   }
   if (key === 'logout') {
-    userStore.logout()
+    await userStore.logout()
     router.push('/login')
     message.success('已退出登录')
   }

@@ -22,10 +22,5 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         return interceptor;
     }
-
-    @Bean
-    public CustomIdGenerator identifierGenerator() {
-        return new CustomIdGenerator();
-    }
 }
 

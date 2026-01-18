@@ -2,6 +2,7 @@ package com.github.motoryang.gateway.filter;
 
 import com.github.motoryang.common.redis.constants.RedisConstants;
 import com.github.motoryang.gateway.constants.Constants;
+import com.github.motoryang.gateway.utils.PublicResourceMatcher;
 import com.github.motoryang.gateway.utils.TokenUtils;
 import com.github.motoryang.gateway.utils.WhiteListMatcher;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -14,7 +15,6 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -28,16 +28,15 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
     @Value("${auth.jwt.secret}")
     private String jwtSecret;
 
-    // 预编译 Secret
     private byte[] secretBytes;
 
     @Resource
     private WhiteListMatcher whiteListMatcher;
+    @Resource
+    private PublicResourceMatcher publicResourceMatcher;
     @Resource
     private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
@@ -51,7 +50,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         var request = exchange.getRequest();
         var path = request.getURI().getPath();
 
-        if (whiteListMatcher.isWhitelisted(path)) {
+        // 白名单或公开静态资源跳过认证
+        if (whiteListMatcher.isWhitelisted(path) || publicResourceMatcher.isPublicByPrefix(path)) {
             return chain.filter(exchange);
         }
 

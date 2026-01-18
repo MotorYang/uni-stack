@@ -286,35 +286,63 @@ body {
 
 .glass-table .n-data-table {
   background-color: transparent;
+  --n-th-color: transparent;
+  --n-td-color: transparent;
+  --n-merged-th-color: transparent;
+  --n-merged-td-color: transparent;
 }
 
 .glass-table .n-data-table-wrapper {
   background-color: transparent;
-  backdrop-filter: blur(12px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.glass-table .n-data-table-base-table {
+  background-color: transparent;
 }
 
 .glass-table .n-data-table-table {
   background-color: transparent;
 }
 
+.glass-table .n-data-table-thead {
+  background: linear-gradient(
+    135deg,
+    rgba(79, 70, 229, 0.06),
+    rgba(79, 70, 229, 0.02)
+  );
+}
+
+.dark .glass-table .n-data-table-thead {
+  background: linear-gradient(
+    135deg,
+    rgba(79, 70, 229, 0.18),
+    rgba(79, 70, 229, 0.08)
+  );
+}
+
 .glass-table .n-data-table-th {
-  background-color: var(--color-glass-soft);
+  background-color: transparent !important;
   border-bottom: 1px solid var(--color-border-subtle);
+  font-weight: 600;
+  color: var(--color-text-main);
 }
 
 .dark .glass-table .n-data-table-th {
-  background-color: var(--color-glass-surface);
+  background-color: transparent !important;
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .glass-table .n-data-table-td {
-  background-color: transparent;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.03);
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+  transition: background-color 0.2s ease;
 }
 
 .dark .glass-table .n-data-table-td {
-  background-color: transparent;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
 
 .glass-table .n-data-table-tr:hover,
@@ -329,12 +357,50 @@ body {
 
 .dark .glass-table .n-data-table-tr:hover,
 .dark .glass-table .n-data-table-tr.n-data-table-tr--hover {
-  background-color: rgba(79, 70, 229, 0.16) !important;
+  background-color: rgba(79, 70, 229, 0.12) !important;
 }
 
 .dark .glass-table .n-data-table-tr:hover .n-data-table-td,
 .dark .glass-table .n-data-table-tr.n-data-table-tr--hover .n-data-table-td {
   background-color: transparent !important;
+}
+
+/* 表格分页样式 */
+.glass-table .n-data-table__pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.glass-table .n-pagination-item {
+  background-color: var(--color-glass-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+}
+
+.glass-table .n-pagination-item:hover {
+  background-color: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+.glass-table .n-pagination-item--active {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* 表格加载状态 */
+.glass-table .n-data-table-loading-wrapper {
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.dark .glass-table .n-data-table-loading-wrapper {
+  background-color: rgba(15, 23, 42, 0.6);
+}
+
+/* 表格空状态 */
+.glass-table .n-data-table-empty {
+  padding: 48px 0;
 }
 
 .glass-btn {

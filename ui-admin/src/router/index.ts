@@ -25,6 +25,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Profile',
         component: () => import('@/views/ProfileView.vue'),
       },
+      // 安全治理
+      {
+        path: '/security/user',
+        name: 'UserManage',
+        component: () => import('@/views/security/UserManageView.vue'),
+      },
       // Catch-all route for undefined paths within the layout
       {
         path: ':pathMatch(.*)*',
