@@ -57,10 +57,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Redis for rate limiting -->
+        <!-- Common-Redis -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-redis</artifactId>
         </dependency>
 
         <!-- Lombok -->

@@ -10,16 +10,17 @@ import com.github.motoryang.common.core.constants.Constants;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.common.core.result.RestResult;
 import com.github.motoryang.common.core.result.ResultCode;
+import com.github.motoryang.common.redis.constants.RedisConstants;
 import com.github.motoryang.common.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 认证服务实现
@@ -62,8 +63,11 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
         }
 
-        // 4. 生成双令牌
-        return generateTokens(user.id(), user.username());
+        // 4. 生成token并存入Redis
+        TokenVO tokenVO = generateTokens(user.id(), user.username());
+        saveTokenToRedis(user.id(), tokenVO);
+
+        return tokenVO;
     }
 
     @Override
@@ -81,22 +85,14 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(ResultCode.TOKEN_INVALID);
         }
 
-        // 3. 检查是否在黑名单中
-        String redisKey = Constants.REDIS_REFRESH_TOKEN_KEY + refreshToken;
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
-            throw new BusinessException(ResultCode.TOKEN_REFRESH_EXPIRED);
-        }
-
         String userId = JwtUtils.getUserId(refreshToken, jwtSecret);
         String username = JwtUtils.getUsername(refreshToken, jwtSecret);
 
-        // 5. 将旧的 refresh token 加入黑名单
-        long remainingTime = JwtUtils.getTokenRemainingTime(refreshToken, jwtSecret);
-        if (remainingTime > 0) {
-            redisTemplate.opsForValue().set(redisKey, "revoked", remainingTime, TimeUnit.MILLISECONDS);
-        }
+        // 3. 生成新的Token并存入redis
+        TokenVO tokenVO = generateTokens(userId, username);
+        saveTokenToRedis(userId, tokenVO);
 
-        return generateTokens(userId, username);
+        return tokenVO;
     }
 
     @Override
@@ -105,13 +101,11 @@ public class AuthServiceImpl implements IAuthService {
             return;
         }
 
-        // 将 access token 加入黑名单
+        // 将token和用户从Redis移除
         try {
-            long remainingTime = JwtUtils.getTokenRemainingTime(accessToken, jwtSecret);
-            if (remainingTime > 0) {
-                String redisKey = Constants.REDIS_TOKEN_KEY + accessToken;
-                redisTemplate.opsForValue().set(redisKey, "revoked", remainingTime, TimeUnit.MILLISECONDS);
-            }
+            String userId = JwtUtils.getUserId(accessToken, jwtSecret);
+            redisTemplate.delete(RedisConstants.REDIS_TOKEN_KEY + userId);
+            redisTemplate.delete(RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId);
         } catch (Exception e) {
             log.warn("Token 已过期或无效: {}", e.getMessage());
         }
@@ -122,5 +116,16 @@ public class AuthServiceImpl implements IAuthService {
         String refreshToken = JwtUtils.createRefreshToken(userId, username, jwtSecret, refreshTokenExpire);
 
         return new TokenVO(accessToken, refreshToken, accessTokenExpire / 1000);
+    }
+
+    private void saveTokenToRedis(String userId, TokenVO tokenVO) {
+        var tokenKey = RedisConstants.REDIS_TOKEN_KEY + userId;
+        var refreshKey = RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId;
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            var stringConn = (StringRedisConnection) connection;
+            stringConn.setEx(tokenKey, (int)(accessTokenExpire/1000), tokenVO.accessToken());
+            stringConn.setEx(refreshKey, (int)(refreshTokenExpire/1000), tokenVO.refreshToken());
+            return null;
+        });
     }
 }
