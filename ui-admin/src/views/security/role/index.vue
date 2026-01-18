@@ -259,7 +259,7 @@
       <template #footer>
         <n-space justify="end">
           <n-button @click="showModal = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="handleSubmit">
+          <n-button type="primary" :loading="savingRole" @click="handleSave">
             确定
           </n-button>
         </n-space>
@@ -268,28 +268,58 @@
 
     <n-modal
       v-model:show="showAddUsersModal"
-      title="添加用户到角色"
+      title="添加角色用户"
       preset="card"
       style="width: 800px"
       :mask-closable="false"
     >
-      <UserPicker
-        v-if="currentRole"
-        :role-id="currentRole.id"
-        :existing-user-ids="roleUserList.map((u) => u.id)"
-        v-model:value="selectedAddUserIds"
-      />
+      <div class="space-y-4">
+        <n-form inline :model="addUserQueryParams" label-placement="left" class="flex flex-wrap gap-4">
+          <n-form-item label="用户名" :show-feedback="false">
+            <n-input v-model:value="addUserQueryParams.username" placeholder="用户名" clearable class="!w-40" />
+          </n-form-item>
+          <n-form-item label="昵称" :show-feedback="false">
+            <n-input v-model:value="addUserQueryParams.nickname" placeholder="昵称" clearable class="!w-40" />
+          </n-form-item>
+          <n-form-item :show-feedback="false">
+            <n-space>
+              <n-button type="primary" size="small" @click="handleSearchAddUsers">
+                <template #icon><n-icon><SearchOutline /></n-icon></template>
+                搜索
+              </n-button>
+              <n-button size="small" @click="handleResetAddUsers">
+                <template #icon><n-icon><RefreshOutline /></n-icon></template>
+                重置
+              </n-button>
+            </n-space>
+          </n-form-item>
+        </n-form>
 
+        <n-data-table
+          :columns="addUserColumns"
+          :data="addUserList"
+          :loading="loadingAddUsers"
+          :pagination="addUserPagination"
+          :row-key="(row: RoleUserVO) => row.id"
+          :bordered="false"
+          :single-line="false"
+          :checked-row-keys="addUserSelectedIds"
+          checkable
+          @update:page="handleAddUserPageChange"
+          @update:page-size="handleAddUserPageSizeChange"
+          @update:checked-row-keys="handleAddUserSelectionChange"
+        />
+      </div>
       <template #footer>
         <n-space justify="end">
           <n-button @click="showAddUsersModal = false">取消</n-button>
           <n-button
             type="primary"
-            :loading="addingUsers"
-            :disabled="selectedAddUserIds.length === 0"
-            @click="handleAddUsersToRole"
+            :loading="savingAddUsers"
+            :disabled="addUserSelectedIds.length === 0"
+            @click="handleConfirmAddUsers"
           >
-            确定添加 ({{ selectedAddUserIds.length }})
+            确定
           </n-button>
         </n-space>
       </template>
@@ -303,31 +333,28 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NInputNumber,
   NButton,
   NSpace,
   NSelect,
+  NTree,
+  NTag,
   NDataTable,
   NModal,
-  NRadio,
-  NRadioGroup,
+  NInputNumber,
   NIcon,
-  NTag,
-  NAvatar,
-  NPopconfirm,
-  NSpin,
-  NTree,
+  NText,
   NTabs,
   NTabPane,
   NDescriptions,
   NDescriptionsItem,
-  NText,
+  NAvatar,
+  NSpin,
   useMessage,
   type FormInst,
   type FormRules,
+  type TreeOption,
   type DataTableColumns,
-  type DataTableRowKey,
-  type TreeOption
+  type DataTableRowKey
 } from 'naive-ui'
 import { SearchOutline, RefreshOutline, AddOutline, PersonAddOutline } from '@vicons/ionicons5'
 import {
@@ -337,7 +364,6 @@ import {
   updateRole,
   getRoleUsers,
   addUsersToRole,
-  removeUserFromRole,
   removeUsersFromRole,
   type RoleVO,
   type RoleDetailVO,
@@ -347,58 +373,94 @@ import {
   type RoleUserVO,
   type RoleUserQueryDTO
 } from '@/api/role'
-import UserPicker from '@/components/UserPicker.vue'
-import { getRoleMenuTree, type MenuVO } from '@/api/menu'
+import { getMenuTree, type MenuVO } from '@/api/menu'
 
 const message = useMessage()
 
-// 状态选项
 const statusOptions = [
   { label: '正常', value: 0 },
   { label: '禁用', value: 1 }
 ]
 
-// 查询参数
 const queryParams = reactive<RoleQueryDTO>({
   roleName: undefined,
   roleKey: undefined,
   status: undefined,
   current: 1,
-  size: 10
+  size: 50
 })
 
-// 列表数据
-const roleList = ref<RoleVO[]>([])
-const loading = ref(false)
 const total = ref(0)
-const currentRole = ref<RoleVO | null>(null)
+const roleTreeData = ref<TreeOption[]>([])
 const selectedRoleKeys = ref<string[]>([])
+const currentRole = ref<RoleDetailVO | null>(null)
+const activeTab = ref('basic')
 
-const roleTreeData = computed<TreeOption[]>(() => {
-  return roleList.value.map((role) => ({
+const buildRoleTreeData = (roles: RoleVO[]): TreeOption[] => {
+  return roles.map(role => ({
     key: role.id,
     label: role.roleName
   }))
-})
+}
 
-const handleRoleTreeSelect = (keys: Array<string | number>) => {
-  selectedRoleKeys.value = keys as string[]
-  const first = keys[0]
-  if (!first) return
-  const target = roleList.value.find((item) => item.id === String(first))
-  if (target) {
-    handleViewUsers(target)
+const loadRoleTree = async () => {
+  try {
+    const res = await getRolePage(queryParams)
+    total.value = res.total
+    roleTreeData.value = buildRoleTreeData(res.records)
+    if (currentRole.value) {
+      const exists = res.records.find(item => item.id === currentRole.value?.id)
+      if (!exists) {
+        currentRole.value = null
+        selectedRoleKeys.value = []
+      }
+    }
+  } catch (error) {
+    message.error('加载角色列表失败')
   }
 }
 
-// 弹窗相关
-const showModal = ref(false)
-const isEdit = ref(false)
-const modalTitle = computed(() => isEdit.value ? '编辑角色' : '新增角色')
-const formRef = ref<FormInst | null>(null)
-const submitting = ref(false)
-const editingRoleId = ref<string>('')
+const handleSearch = () => {
+  loadRoleTree()
+}
 
+const handleReset = () => {
+  queryParams.roleName = undefined
+  queryParams.roleKey = undefined
+  queryParams.status = undefined
+  loadRoleTree()
+}
+
+const loadRoleDetail = async (id: string) => {
+  try {
+    const res = await getRoleDetail(id)
+    currentRole.value = res
+    await loadRoleMenus(id)
+    await loadRoleUsers(id)
+  } catch (error) {
+    message.error('加载角色详情失败')
+  }
+}
+
+const handleRoleTreeSelect = (keys: string[]) => {
+  selectedRoleKeys.value = keys
+  if (keys.length === 0) {
+    currentRole.value = null
+    return
+  }
+  const id = keys[0]
+  if (!id) {
+    currentRole.value = null
+    return
+  }
+  loadRoleDetail(id)
+}
+
+const showModal = ref(false)
+const modalTitle = ref('新增角色')
+const formRef = ref<FormInst | null>(null)
+const savingRole = ref(false)
+const isEdit = ref(false)
 const formData = reactive<RoleCreateDTO & RoleUpdateDTO>({
   roleName: '',
   roleKey: '',
@@ -410,17 +472,132 @@ const formData = reactive<RoleCreateDTO & RoleUpdateDTO>({
 const formRules: FormRules = {
   roleName: [
     { required: true, message: '请输入角色名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '角色名称长度为 2-50 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
   ],
   roleKey: [
     { required: true, message: '请输入权限标识', trigger: 'blur' },
-    { pattern: /^[A-Z][A-Z0-9_]*$/, message: '权限标识必须以大写字母开头，只能包含大写字母、数字和下划线', trigger: 'blur' }
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
   ]
 }
 
-const activeTab = ref('basic')
+const handleAdd = () => {
+  isEdit.value = false
+  modalTitle.value = '新增角色'
+  Object.assign(formData, {
+    roleName: '',
+    roleKey: '',
+    sort: 0,
+    status: 0,
+    remark: ''
+  })
+  showModal.value = true
+}
 
-// ==================== 角色用户相关 ====================
+const handleEdit = (role: RoleDetailVO) => {
+  isEdit.value = true
+  modalTitle.value = '编辑角色'
+  Object.assign(formData, {
+    roleName: role.roleName,
+    roleKey: role.roleKey,
+    sort: role.sort,
+    status: role.status,
+    remark: role.remark
+  })
+  showModal.value = true
+}
+
+const handleSave = async () => {
+  try {
+    await formRef.value?.validate()
+  } catch {
+    return
+  }
+
+  savingRole.value = true
+  try {
+    if (isEdit.value && currentRole.value) {
+      const payload: RoleUpdateDTO = {
+        roleName: formData.roleName,
+        roleKey: formData.roleKey,
+        sort: formData.sort,
+        status: formData.status,
+        remark: formData.remark
+      }
+      await updateRole(currentRole.value.id, payload)
+      message.success('更新成功')
+    } else {
+      const payload: RoleCreateDTO = {
+        roleName: formData.roleName,
+        roleKey: formData.roleKey,
+        sort: formData.sort,
+        status: formData.status,
+        remark: formData.remark
+      }
+      await createRole(payload)
+      message.success('创建成功')
+    }
+    showModal.value = false
+    loadRoleTree()
+  } catch (error) {
+    message.error('保存失败')
+  } finally {
+    savingRole.value = false
+  }
+}
+
+const roleMenuTreeData = ref<TreeOption[]>([])
+const checkedMenuIds = ref<string[]>([])
+const loadingRoleMenus = ref(false)
+const savingRoleMenus = ref(false)
+
+const buildMenuTree = (menus: MenuVO[]): TreeOption[] => {
+  return menus.map(menu => ({
+    key: menu.id,
+    label: menu.menuName,
+    children: menu.children ? buildMenuTree(menu.children) : undefined
+  }))
+}
+
+const loadRoleMenus = async (roleId: string) => {
+  loadingRoleMenus.value = true
+  try {
+    const [allMenus, roleDetail] = await Promise.all([
+      getMenuTree(),
+      getRoleDetail(roleId)
+    ])
+    roleMenuTreeData.value = buildMenuTree(allMenus)
+    checkedMenuIds.value = roleDetail.menuIds || []
+  } catch (error) {
+    message.error('加载角色菜单失败')
+  } finally {
+    loadingRoleMenus.value = false
+  }
+}
+
+const handleMenuCheckedChange = (keys: (string | number)[]) => {
+  checkedMenuIds.value = keys as string[]
+}
+
+const handleResetRoleMenus = async () => {
+  if (!currentRole.value) return
+  await loadRoleMenus(currentRole.value.id)
+}
+
+const handleSaveRoleMenus = async () => {
+  if (!currentRole.value) return
+  savingRoleMenus.value = true
+  try {
+    await updateRole(currentRole.value.id, {
+      menuIds: checkedMenuIds.value
+    })
+    message.success('菜单权限已保存')
+  } catch (error) {
+    message.error('保存菜单权限失败')
+  } finally {
+    savingRoleMenus.value = false
+  }
+}
+
 const roleUserList = ref<RoleUserVO[]>([])
 const loadingUsers = ref(false)
 const userTotal = ref(0)
@@ -443,7 +620,6 @@ const userPagination = computed(() => ({
   pageSizes: [10, 20, 50]
 }))
 
-// 角色用户表格列
 const userColumns: DataTableColumns<RoleUserVO> = [
   { type: 'selection' },
   {
@@ -455,213 +631,51 @@ const userColumns: DataTableColumns<RoleUserVO> = [
     title: '昵称',
     key: 'nickname',
     width: 120,
-    render: (row) => row.nickname || '-'
+    render: row => row.nickname || '-'
   },
   {
     title: '头像',
     key: 'avatar',
     width: 70,
-    render: (row) => h(NAvatar, {
-      size: 'small',
-      round: true,
-      src: row.avatar || undefined,
-      fallbackSrc: 'https://ui-avatars.com/api/?name=' + (row.nickname || row.username)
-    })
+    render: row =>
+      h(NAvatar, {
+        size: 'small',
+        round: true,
+        src: row.avatar || undefined,
+        fallbackSrc: 'https://ui-avatars.com/api/?name=' + (row.nickname || row.username)
+      })
   },
   {
     title: '邮箱',
     key: 'email',
     width: 180,
     ellipsis: { tooltip: true },
-    render: (row) => row.email || '-'
+    render: row => row.email || '-'
   },
   {
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h(NTag, {
-      type: row.status === 0 ? 'success' : 'error',
-      size: 'small'
-    }, { default: () => row.status === 0 ? '正常' : '禁用' })
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 80,
-    render: (row) => h(NPopconfirm, {
-      onPositiveClick: () => handleRemoveUser(row)
-    }, {
-      trigger: () => h(NButton, {
-        size: 'small',
-        quaternary: true,
-        type: 'error'
-      }, { default: () => '移除' }),
-      default: () => `确定要将用户 "${row.username}" 从该角色移除吗？`
-    })
+    render: row =>
+      h(
+        NTag,
+        {
+          type: row.status === 0 ? 'success' : 'error',
+          size: 'small'
+        },
+        { default: () => (row.status === 0 ? '正常' : '禁用') }
+      )
   }
 ]
 
-const roleMenus = ref<MenuVO[]>([])
-const loadingRoleMenus = ref(false)
-const checkedMenuIds = ref<string[]>([])
-const savingRoleMenus = ref(false)
-
-const roleMenuTreeData = computed<TreeOption[]>(() => {
-  return transformRoleMenusToTree(roleMenus.value)
-})
-
-function transformRoleMenusToTree(menus: MenuVO[]): TreeOption[] {
-  return menus.map((menu) => ({
-    key: menu.id,
-    label: menu.menuName,
-    children: menu.children ? transformRoleMenusToTree(menu.children) : undefined
-  }))
-}
-
-// ==================== 添加用户相关 ====================
-const showAddUsersModal = ref(false)
-const selectedAddUserIds = ref<string[]>([])
-const addingUsers = ref(false)
-
-// ==================== 方法 ====================
-
-// 加载角色列表
-const loadRoleList = async () => {
-  loading.value = true
-  try {
-    const res = await getRolePage(queryParams)
-    roleList.value = res.records
-    total.value = res.total
-    let target: RoleVO | undefined
-    if (currentRole.value) {
-      target = res.records.find((item) => item.id === currentRole.value?.id)
-    }
-    if (!target && res.records.length > 0) {
-      target = res.records[0]
-    }
-    if (target) {
-      handleViewUsers(target)
-    } else {
-      currentRole.value = null
-      roleUserList.value = []
-      userTotal.value = 0
-      selectedUserIds.value = []
-      roleMenus.value = []
-      selectedRoleKeys.value = []
-    }
-  } catch (error) {
-    message.error('加载角色列表失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 搜索
-const handleSearch = () => {
-  queryParams.current = 1
-  loadRoleList()
-}
-
-// 重置搜索
-const handleReset = () => {
-  queryParams.roleName = undefined
-  queryParams.roleKey = undefined
-  queryParams.status = undefined
-  queryParams.current = 1
-  loadRoleList()
-}
-
-// 新增角色
-const handleAdd = () => {
-  isEdit.value = false
-  editingRoleId.value = ''
-  Object.assign(formData, {
-    roleName: '',
-    roleKey: '',
-    sort: 0,
-    status: 0,
-    remark: ''
-  })
-  showModal.value = true
-}
-
-// 编辑角色
-const handleEdit = (row: RoleVO) => {
-  isEdit.value = true
-  editingRoleId.value = row.id
-  Object.assign(formData, {
-    roleName: row.roleName,
-    roleKey: row.roleKey,
-    sort: row.sort,
-    status: row.status,
-    remark: row.remark || ''
-  })
-  showModal.value = true
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  try {
-    await formRef.value?.validate()
-  } catch {
-    return
-  }
-
-  submitting.value = true
-  try {
-    if (isEdit.value) {
-      const updateData: RoleUpdateDTO = {
-        roleName: formData.roleName,
-        roleKey: formData.roleKey,
-        sort: formData.sort,
-        status: formData.status,
-        remark: formData.remark
-      }
-      await updateRole(editingRoleId.value, updateData)
-      message.success('更新成功')
-    } else {
-      const createData: RoleCreateDTO = {
-        roleName: formData.roleName!,
-        roleKey: formData.roleKey!,
-        sort: formData.sort,
-        status: formData.status,
-        remark: formData.remark
-      }
-      await createRole(createData)
-      message.success('创建成功')
-    }
-    showModal.value = false
-    loadRoleList()
-  } catch (error) {
-    message.error(isEdit.value ? '更新失败' : '创建失败')
-  } finally {
-    submitting.value = false
-  }
-}
-
-// ==================== 角色用户相关方法 ====================
-
-// 查看角色用户
-const handleViewUsers = (row: RoleVO) => {
-  currentRole.value = row
-  activeTab.value = 'basic'
-  selectedRoleKeys.value = [row.id]
-  userQueryParams.roleId = row.id
-  userQueryParams.username = undefined
-  userQueryParams.nickname = undefined
-  userQueryParams.current = 1
-  selectedUserIds.value = []
-  loadRoleUsers()
-  loadRoleMenus()
-}
-
-// 加载角色用户列表
-const loadRoleUsers = async () => {
+const loadRoleUsers = async (roleId: string) => {
   loadingUsers.value = true
   try {
+    userQueryParams.roleId = roleId
     const res = await getRoleUsers(userQueryParams)
     roleUserList.value = res.records
     userTotal.value = res.total
+    selectedUserIds.value = []
   } catch (error) {
     message.error('加载角色用户失败')
   } finally {
@@ -669,120 +683,155 @@ const loadRoleUsers = async () => {
   }
 }
 
-const loadRoleMenus = async () => {
-  if (!currentRole.value) return
-  loadingRoleMenus.value = true
-  try {
-    const [menus, detail] = await Promise.all([
-      getRoleMenuTree(currentRole.value.id),
-      getRoleDetail(currentRole.value.id)
-    ])
-    roleMenus.value = menus
-    checkedMenuIds.value = (detail as RoleDetailVO).menuIds || []
-  } catch (error) {
-    roleMenus.value = []
-    checkedMenuIds.value = []
-    message.error('加载角色菜单失败')
-  } finally {
-    loadingRoleMenus.value = false
-  }
-}
-
-const handleMenuCheckedChange = (keys: Array<string | number>) => {
-  checkedMenuIds.value = keys as string[]
-}
-
-const handleSaveRoleMenus = async () => {
-  if (!currentRole.value) return
-  savingRoleMenus.value = true
-  try {
-    await updateRole(currentRole.value.id, { menuIds: checkedMenuIds.value })
-    message.success('保存成功')
-    await loadRoleMenus()
-  } catch (error) {
-    message.error('保存失败')
-  } finally {
-    savingRoleMenus.value = false
-  }
-}
-
-const handleResetRoleMenus = () => {
-  loadRoleMenus()
-}
-
-// 搜索角色用户
-const handleSearchUsers = () => {
-  userQueryParams.current = 1
-  loadRoleUsers()
-}
-
-// 用户分页变化
 const handleUserPageChange = (page: number) => {
   userQueryParams.current = page
-  loadRoleUsers()
+  if (currentRole.value) {
+    loadRoleUsers(currentRole.value.id)
+  }
 }
 
-const handleUserPageSizeChange = (pageSize: number) => {
-  userQueryParams.size = pageSize
+const handleUserPageSizeChange = (size: number) => {
+  userQueryParams.size = size
   userQueryParams.current = 1
-  loadRoleUsers()
+  if (currentRole.value) {
+    loadRoleUsers(currentRole.value.id)
+  }
 }
 
-// 用户选择变化
+const handleSearchUsers = () => {
+  userQueryParams.current = 1
+  if (currentRole.value) {
+    loadRoleUsers(currentRole.value.id)
+  }
+}
+
 const handleUserSelectionChange = (keys: DataTableRowKey[]) => {
   selectedUserIds.value = keys
 }
 
-// 移除单个用户
-const handleRemoveUser = async (row: RoleUserVO) => {
+const handleBatchRemoveUsers = async () => {
+  if (!currentRole.value || selectedUserIds.value.length === 0) return
   try {
-    await removeUserFromRole(currentRole.value!.id, row.id)
+    await removeUsersFromRole(currentRole.value.id, selectedUserIds.value as string[])
     message.success('移除成功')
-    loadRoleUsers()
+    loadRoleUsers(currentRole.value.id)
   } catch (error) {
     message.error('移除失败')
   }
 }
 
-// 批量移除用户
-const handleBatchRemoveUsers = async () => {
-  if (selectedUserIds.value.length === 0) return
+const showAddUsersModal = ref(false)
+const addUserQueryParams = reactive<RoleUserQueryDTO>({
+  roleId: '',
+  username: undefined,
+  nickname: undefined,
+  current: 1,
+  size: 10
+})
+
+const addUserList = ref<RoleUserVO[]>([])
+const loadingAddUsers = ref(false)
+const addUserTotal = ref(0)
+const addUserSelectedIds = ref<DataTableRowKey[]>([])
+const savingAddUsers = ref(false)
+
+const addUserPagination = computed(() => ({
+  page: addUserQueryParams.current,
+  pageSize: addUserQueryParams.size,
+  pageCount: Math.ceil(addUserTotal.value / (addUserQueryParams.size || 10)),
+  itemCount: addUserTotal.value,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50]
+}))
+
+const addUserColumns: DataTableColumns<RoleUserVO> = [
+  { type: 'selection' },
+  {
+    title: '用户名',
+    key: 'username',
+    width: 120
+  },
+  {
+    title: '昵称',
+    key: 'nickname',
+    width: 120,
+    render: row => row.nickname || '-'
+  },
+  {
+    title: '邮箱',
+    key: 'email',
+    width: 180,
+    ellipsis: { tooltip: true },
+    render: row => row.email || '-'
+  }
+]
+
+const loadAddUsers = async () => {
+  if (!currentRole.value) return
+  loadingAddUsers.value = true
   try {
-    await removeUsersFromRole(currentRole.value!.id, selectedUserIds.value as string[])
-    message.success('批量移除成功')
-    selectedUserIds.value = []
-    loadRoleUsers()
+    addUserQueryParams.roleId = currentRole.value.id
+    const res = await getRoleUsers(addUserQueryParams)
+    addUserList.value = res.records
+    addUserTotal.value = res.total
   } catch (error) {
-    message.error('批量移除失败')
+    message.error('加载可添加用户失败')
+  } finally {
+    loadingAddUsers.value = false
   }
 }
 
-// ==================== 添加用户相关方法 ====================
-
-// 打开添加用户弹窗
 const handleOpenAddUsers = () => {
   if (!currentRole.value) return
-  selectedAddUserIds.value = []
   showAddUsersModal.value = true
+  addUserSelectedIds.value = []
+  loadAddUsers()
 }
 
-// 添加用户到角色
-const handleAddUsersToRole = async () => {
-  if (selectedAddUserIds.value.length === 0) return
-  addingUsers.value = true
+const handleAddUserPageChange = (page: number) => {
+  addUserQueryParams.current = page
+  loadAddUsers()
+}
+
+const handleAddUserPageSizeChange = (size: number) => {
+  addUserQueryParams.size = size
+  addUserQueryParams.current = 1
+  loadAddUsers()
+}
+
+const handleSearchAddUsers = () => {
+  addUserQueryParams.current = 1
+  loadAddUsers()
+}
+
+const handleResetAddUsers = () => {
+  addUserQueryParams.username = undefined
+  addUserQueryParams.nickname = undefined
+  addUserQueryParams.current = 1
+  loadAddUsers()
+}
+
+const handleAddUserSelectionChange = (keys: DataTableRowKey[]) => {
+  addUserSelectedIds.value = keys
+}
+
+const handleConfirmAddUsers = async () => {
+  if (!currentRole.value || addUserSelectedIds.value.length === 0) return
+  savingAddUsers.value = true
   try {
-    await addUsersToRole(currentRole.value!.id, selectedAddUserIds.value)
+    await addUsersToRole(currentRole.value.id, addUserSelectedIds.value as string[])
     message.success('添加成功')
     showAddUsersModal.value = false
-    loadRoleUsers() // 刷新角色用户列表
+    loadRoleUsers(currentRole.value.id)
   } catch (error) {
     message.error('添加失败')
   } finally {
-    addingUsers.value = false
+    savingAddUsers.value = false
   }
 }
 
 onMounted(() => {
-  loadRoleList()
+  loadRoleTree()
 })
 </script>
+

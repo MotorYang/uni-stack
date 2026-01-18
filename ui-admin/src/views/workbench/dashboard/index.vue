@@ -1,6 +1,5 @@
 <template>
   <div class="p-8 space-y-8">
-    <!-- Top Row: Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <n-card
         v-for="stat in stats"
@@ -22,7 +21,7 @@
               {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}% from last month
             </n-tag>
           </div>
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white/40 dark:bg-white/5 backdrop-blur-sm">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white/40 dark:bg-white/5 backdrop-blur-sm">
             <n-icon size="24">
               <component :is="stat.icon" />
             </n-icon>
@@ -31,19 +30,17 @@
       </n-card>
     </div>
 
-    <!-- Middle Row: User Activity Chart -->
     <div class="glass-card !p-6 animate-enter delay-200">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-bold text-text-main">服务请求数量</h2>
         <div class="flex gap-2">
-           <n-button size="small" quaternary class="hover:bg-white/50">Weekly</n-button>
-           <n-button size="small" type="primary" secondary class="shadow-sm">Monthly</n-button>
+          <n-button size="small" quaternary class="hover:bg-white/50">Weekly</n-button>
+          <n-button size="small" type="primary" secondary class="shadow-sm">Monthly</n-button>
         </div>
       </div>
       <div ref="chartRef" class="w-full h-[350px]"></div>
     </div>
 
-    <!-- Bottom Row: Scheduled Job Logs Table -->
     <div class="glass-card !p-0 overflow-hidden animate-enter delay-300">
       <div class="p-6 border-b border-white/40 flex justify-between items-center">
         <h2 class="text-xl font-bold text-text-main">定时任务日志</h2>
@@ -62,12 +59,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, h, watch } from 'vue'
 import { NIcon, NButton, NDataTable, NTag, NCard, type DataTableColumns } from 'naive-ui'
-import { 
-  CardOutline, 
-  PeopleOutline, 
+import {
+  CardOutline,
+  PeopleOutline,
   PersonOutline,
   ServerOutline,
-  PulseOutline,
+  PulseOutline
 } from '@vicons/ionicons5'
 import * as echarts from 'echarts'
 import { useThemeStore } from '@/stores/theme'
@@ -91,7 +88,6 @@ const stats = ref<ViewStat[]>([])
 const chartDates = ref<string[]>([])
 const chartActiveUsers = ref<number[]>([])
 
-// Chart
 const chartRef = ref<HTMLElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 
@@ -166,36 +162,43 @@ const initChart = () => {
   }
 }
 
-watch(() => themeStore.isDark, () => {
-  initChart()
-})
+watch(
+  () => themeStore.isDark,
+  () => {
+    initChart()
+  }
+)
 
 const tableData = ref<DashboardTransaction[]>([])
 
 const columns: DataTableColumns<DashboardTransaction> = [
   { title: 'Transaction ID', key: 'id' },
-  { 
-    title: 'User', 
+  {
+    title: 'User',
     key: 'user',
-    render: (row) => h('div', { class: 'font-medium text-text-main' }, row.user)
+    render: row => h('div', { class: 'font-medium text-text-main' }, row.user)
   },
   { title: 'Amount', key: 'amount' },
   { title: 'Date', key: 'date' },
-  { 
-    title: 'Status', 
+  {
+    title: 'Status',
     key: 'status',
-    render: (row) => {
-      const type = row.status === 'completed' ? 'success' : row.status === 'pending' ? 'warning' : 'error'
-      return h(NTag, { type, bordered: false, size: 'small', round: true }, { default: () => row.status })
+    render: row => {
+      const type =
+        row.status === 'completed' ? 'success' : row.status === 'pending' ? 'warning' : 'error'
+      return h(
+        NTag,
+        { type, bordered: false, size: 'small', round: true },
+        { default: () => row.status }
+      )
     }
   }
 ]
 
-// Lifecycle
 const loadDashboard = async () => {
   try {
     const data = await getDashboardStats()
-    stats.value = data.stats.map((item) => ({
+    stats.value = data.stats.map(item => ({
       ...item,
       icon: statIconMap[item.key] || CardOutline
     }))
@@ -222,3 +225,4 @@ const handleResize = () => {
   chartInstance?.resize()
 }
 </script>
+

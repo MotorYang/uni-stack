@@ -325,35 +325,29 @@ import {
 
 const message = useMessage()
 
-// 菜单类型配置
 const menuTypeConfig: Record<MenuVO['menuType'], { label: string; type: 'info' | 'success' | 'warning' }> = {
   'M': { label: '目录', type: 'info' },
   'C': { label: '菜单', type: 'success' },
   'B': { label: '按钮', type: 'warning' }
 }
 
-// 搜索关键字
 const searchKeyword = ref('')
 const isExpandAll = ref(true)
 const loading = ref(false)
 
-// 菜单数据
 const menuList = ref<MenuVO[]>([])
 const selectedKeys = ref<string[]>([])
 const selectedMenu = ref<MenuVO | null>(null)
 
-// 将菜单数据转换为树形结构
 const treeData = computed<TreeOption[]>(() => {
   return transformToTreeData(menuList.value)
 })
 
-// 过滤后的树数据
 const filteredTreeData = computed<TreeOption[]>(() => {
   if (!searchKeyword.value) return treeData.value
   return filterTree(treeData.value, searchKeyword.value.toLowerCase())
 })
 
-// 递归过滤树
 function filterTree(nodes: TreeOption[], keyword: string): TreeOption[] {
   return nodes.reduce((acc: TreeOption[], node) => {
     const label = (node.label as string)?.toLowerCase() || ''
@@ -374,7 +368,6 @@ function filterTree(nodes: TreeOption[], keyword: string): TreeOption[] {
   }, [])
 }
 
-// 转换菜单数据为树形结构
 function transformToTreeData(menus: MenuVO[]): TreeOption[] {
   return menus.map(menu => ({
     key: menu.id,
@@ -384,7 +377,6 @@ function transformToTreeData(menus: MenuVO[]): TreeOption[] {
   }))
 }
 
-// 菜单树选择器选项
 const menuTreeOptions = computed<TreeSelectOption[]>(() => {
   const options: TreeSelectOption[] = [
     { key: '0', label: '根目录' }
@@ -402,7 +394,6 @@ const menuTreeOptions = computed<TreeSelectOption[]>(() => {
   return options
 })
 
-// 获取图标组件
 function getIconComponent(iconName: string | null): Component {
   if (!iconName) return EllipseOutline
   const icon = (Ionicons as Record<string, Component | undefined>)[iconName]
@@ -410,7 +401,6 @@ function getIconComponent(iconName: string | null): Component {
   return EllipseOutline
 }
 
-// 获取父菜单名称
 function getParentMenuName(parentId: string): string {
   if (parentId === '0') return '根目录'
   const findMenu = (menus: MenuVO[]): MenuVO | null => {
@@ -427,7 +417,6 @@ function getParentMenuName(parentId: string): string {
   return parent?.menuName || '-'
 }
 
-// 查找菜单
 function findMenuById(menus: MenuVO[], id?: string): MenuVO | null {
   if (!id) return null
   for (const menu of menus) {
@@ -440,14 +429,12 @@ function findMenuById(menus: MenuVO[], id?: string): MenuVO | null {
   return null
 }
 
-// 树节点属性
 const nodeProps = () => {
   return {
     class: 'menu-tree-node'
   }
 }
 
-// 渲染树节点标签
 const renderLabel = ({ option }: { option: TreeOption }): VNodeChild => {
   const menu = (option as any).menuData as MenuVO
   return h('div', { class: 'flex items-center gap-2 py-1' }, [
@@ -460,14 +447,12 @@ const renderLabel = ({ option }: { option: TreeOption }): VNodeChild => {
   ])
 }
 
-// 渲染树节点后缀（徽标）
 const renderSuffix = ({ option }: { option: TreeOption }): VNodeChild => {
   const menu = (option as any).menuData as MenuVO
   if (!menu) return null
 
   const badges: VNodeChild[] = []
 
-  // 类型徽标
   badges.push(h(NTag, {
     size: 'tiny',
     type: menuTypeConfig[menu.menuType]?.type || 'default',
@@ -475,7 +460,6 @@ const renderSuffix = ({ option }: { option: TreeOption }): VNodeChild => {
     round: true
   }, { default: () => menuTypeConfig[menu.menuType]?.label || menu.menuType }))
 
-  // 状态徽标
   if (menu.status === 1) {
     badges.push(h(NTag, {
       size: 'tiny',
@@ -485,7 +469,6 @@ const renderSuffix = ({ option }: { option: TreeOption }): VNodeChild => {
     }, { default: () => '禁用' }))
   }
 
-  // 隐藏徽标
   if (menu.visible === 1) {
     badges.push(h(NTag, {
       size: 'tiny',
@@ -498,7 +481,6 @@ const renderSuffix = ({ option }: { option: TreeOption }): VNodeChild => {
   return h('div', { class: 'flex items-center gap-1' }, badges)
 }
 
-// 选择菜单
 const handleSelectMenu = (keys: string[]) => {
   selectedKeys.value = keys
   if (keys.length > 0) {
@@ -508,12 +490,10 @@ const handleSelectMenu = (keys: string[]) => {
   }
 }
 
-// 加载菜单列表
 const loadMenuList = async () => {
   loading.value = true
   try {
     menuList.value = await getMenuTree()
-    // 如果有选中的菜单，刷新选中状态
     if (selectedKeys.value.length > 0) {
       selectedMenu.value = findMenuById(menuList.value, selectedKeys.value[0])
     }
@@ -524,12 +504,10 @@ const loadMenuList = async () => {
   }
 }
 
-// 展开/折叠全部
 const handleExpandAll = () => {
   isExpandAll.value = !isExpandAll.value
 }
 
-// 弹窗相关
 const showModal = ref(false)
 const isEdit = ref(false)
 const modalTitle = computed(() => isEdit.value ? '编辑菜单' : '新增菜单')
@@ -571,7 +549,6 @@ const formRules: FormRules = {
   ]
 }
 
-// 新增菜单
 const handleAdd = (parent: MenuVO | null) => {
   isEdit.value = false
   editingMenuId.value = ''
@@ -590,7 +567,6 @@ const handleAdd = (parent: MenuVO | null) => {
   showModal.value = true
 }
 
-// 编辑菜单
 const handleEdit = (menu: MenuVO) => {
   isEdit.value = true
   editingMenuId.value = menu.id
@@ -609,7 +585,6 @@ const handleEdit = (menu: MenuVO) => {
   showModal.value = true
 }
 
-// 提交表单
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
@@ -659,7 +634,6 @@ const handleSubmit = async () => {
   }
 }
 
-// 删除菜单
 const handleDelete = async (menu: MenuVO) => {
   if (menu.children && menu.children.length > 0) {
     message.warning('请先删除子菜单')
@@ -691,7 +665,6 @@ onMounted(() => {
   display: none;
 }
 
-/* 毛玻璃小卡片 */
 .glass-card-sm {
   background: var(--glass-bg-light);
   backdrop-filter: blur(12px);
@@ -706,7 +679,6 @@ onMounted(() => {
   border-color: var(--glass-border);
 }
 
-/* 树节点样式 */
 :deep(.n-tree-node) {
   border-radius: 8px;
   margin: 2px 0;
@@ -728,3 +700,4 @@ onMounted(() => {
   width: 20px !important;
 }
 </style>
+

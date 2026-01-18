@@ -124,7 +124,20 @@
 </template>
 
 <script setup lang="ts">
-import { NAvatar, NButton, NCard, NForm, NFormItem, NInput, NModal, NRadio, NRadioGroup, NSpace, NIcon, useMessage } from 'naive-ui'
+import {
+  NAvatar,
+  NButton,
+  NCard,
+  NForm,
+  NFormItem,
+  NInput,
+  NModal,
+  NRadio,
+  NRadioGroup,
+  NSpace,
+  NIcon,
+  useMessage
+} from 'naive-ui'
 import { CameraOutline } from '@vicons/ionicons5'
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
@@ -155,13 +168,11 @@ const handleAvatarChange = async (event: Event) => {
   const file = input.files?.[0]
   if (!file) return
 
-  // 验证文件类型
   if (!file.type.startsWith('image/')) {
     message.error('请选择图片文件')
     return
   }
 
-  // 验证文件大小 (2MB)
   if (file.size > 2 * 1024 * 1024) {
     message.error('图片大小不能超过 2MB')
     return
@@ -175,7 +186,6 @@ const handleAvatarChange = async (event: Event) => {
   } catch (error) {
     message.error('头像上传失败')
   } finally {
-    // 清空 input，允许重复选择同一文件
     input.value = ''
   }
 }
@@ -218,3 +228,4 @@ const handleSave = async () => {
   }
 }
 </script>
+

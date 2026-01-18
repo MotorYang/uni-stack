@@ -1,63 +1,83 @@
 <template>
-  <div class="h-screen w-screen bg-transparent overflow-hidden flex relative">
-    <!-- Sidebar -->
-    <aside
-      class="floating-sidebar flex flex-col glass-sidebar z-50"
-      :style="{ width: collapsed ? '80px' : '240px' }"
+  <div 
+    class="h-screen w-screen bg-transparent overflow-hidden flex relative font-sans transition-colors duration-500"
+    :class="themeStore.isDark ? 'dark' : ''"
+  >
+    <div 
+      class="fixed inset-0 z-0 transition-all duration-700"
+      :class="themeStore.isDark ? 'bg-slate-950' : 'bg-slate-50'"
     >
-      <!-- Logo -->
-      <div class="h-16 flex items-center justify-center border-b border-white/20 mb-2 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
-        <h1 class="text-xl font-bold text-primary flex items-center gap-2 relative z-10">
-          <n-icon size="26" class="text-blue-500">
+      <div 
+        class="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full blur-[120px] transition-all duration-1000"
+        :class="themeStore.isDark ? 'bg-blue-600/10' : 'bg-blue-400/20'"
+      ></div>
+      <div 
+        class="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] rounded-full blur-[120px] transition-all duration-1000"
+        :class="themeStore.isDark ? 'bg-purple-600/10' : 'bg-purple-400/20'"
+      ></div>
+    </div>
+
+    <aside
+      class="floating-sidebar flex flex-col glass-sidebar z-50 relative shrink-0"
+      :style="{ width: collapsed ? '82px' : '260px' }"
+    >
+      <div class="h-20 flex items-center justify-center border-b border-white/10 mb-2 relative overflow-hidden shrink-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
+        <h1 class="text-xl font-bold flex items-center gap-3 relative z-10">
+          <n-icon size="28" class="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
             <Layers />
           </n-icon>
           <transition name="fade-slide">
-            <span v-show="!collapsed" class="whitespace-nowrap">UniStack</span>
+            <span 
+              v-show="!collapsed" 
+              class="whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r transition-all duration-500"
+              :class="themeStore.isDark ? 'from-white to-white/70' : 'from-blue-600 to-indigo-600'"
+            >
+              UniStack
+            </span>
           </transition>
         </h1>
       </div>
 
-      <!-- Menu -->
       <div class="flex-1 overflow-y-auto px-3 py-2 menu-scroll">
         <n-menu
           :options="menuOptions"
           :value="activeKey"
           :collapsed="collapsed"
-          :collapsed-width="56"
+          :collapsed-width="64"
           :collapsed-icon-size="22"
           v-model:expanded-keys="expandedKeys"
           @update:value="handleUpdateValue"
-          :indent="18"
+          :indent="20"
           class="glass-menu"
         />
       </div>
 
-      <!-- User Card -->
-      <div class="p-3 border-t border-white/20">
-        <n-dropdown
-          trigger="click"
-          :options="userMenuOptions"
-          @select="handleUserMenuSelect"
-          placement="top-start"
-        >
-          <div
-            class="glass-card-sm flex items-center gap-3 p-3 cursor-pointer"
+      <div class="p-4 border-t border-white/10">
+        <n-dropdown trigger="click" :options="userMenuOptions" @select="handleUserMenuSelect" placement="top-start">
+          <div 
+            class="glass-card-sm flex items-center gap-3 p-3 cursor-pointer group transition-all" 
             :class="{ 'justify-center !p-2': collapsed }"
           >
             <n-avatar
               round
               size="small"
-              :src="userStore.userInfo?.avatar || 'https://ui-avatars.com/api/?name=User&background=random'"
-              class="ring-2 ring-white/20 ring-offset-1 ring-offset-transparent"
+              :src="userStore.userInfo?.avatar || 'https://ui-avatars.com/api/?name=User'"
+              class="ring-2 ring-white/20 group-hover:ring-blue-400/50"
             />
             <transition name="fade-slide">
               <div class="flex flex-col min-w-0" v-show="!collapsed">
-                <span class="user-name text-sm font-semibold truncate">
-                  {{ userStore.userInfo?.nickname || 'User' }}
+                <span 
+                  class="text-sm font-semibold truncate transition-colors"
+                  :class="themeStore.isDark ? 'text-white/90' : 'text-slate-800'"
+                >
+                  {{ userStore.userInfo?.nickname || '管理员' }}
                 </span>
-                <span class="user-email text-xs truncate">
-                  {{ userStore.userInfo?.email || 'email@example.com' }}
+                <span 
+                  class="text-xs truncate scale-90 origin-left transition-colors"
+                  :class="themeStore.isDark ? 'text-white/40' : 'text-slate-500'"
+                >
+                  {{ userStore.userInfo?.email || 'admin@unstack.com' }}
                 </span>
               </div>
             </transition>
@@ -66,55 +86,34 @@
       </div>
     </aside>
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col h-full relative z-10">
-      <!-- Header -->
-      <header class="floating-header glass-header flex items-center px-6 justify-between">
-        <div class="flex items-center gap-4">
-          <!-- Toggle Button -->
-          <n-button quaternary circle @click="collapsed = !collapsed" class="header-btn">
-            <template #icon>
-              <n-icon size="22">
-                <MenuOutline />
-              </n-icon>
-            </template>
+    <div class="flex-1 flex flex-col h-full relative z-10 min-w-0">
+      <header class="floating-header glass-header flex items-center px-6 justify-between shrink-0 transition-all duration-500">
+        <div class="flex items-center gap-6">
+          <n-button quaternary circle @click="collapsed = !collapsed" class="header-icon-btn">
+            <template #icon><n-icon size="22"><MenuOutline /></n-icon></template>
           </n-button>
-
-          <!-- Search -->
-          <div class="w-80 lg:w-96">
-            <n-input round placeholder="搜索菜单、功能..." class="glass-input">
-              <template #prefix>
-                <n-icon :component="Search" class="text-gray-400" />
-              </template>
+          
+          <div class="hidden md:block w-72 lg:w-96">
+            <n-input round placeholder="搜索功能 (Ctrl + K)" class="glass-input">
+              <template #prefix><n-icon :component="Search" class="opacity-40" /></template>
+              <template #suffix><kbd class="text-[10px] opacity-30 border border-current px-1.5 rounded">⌘ K</kbd></template>
             </n-input>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <!-- Theme Toggle -->
-          <n-button circle quaternary class="header-btn" @click="themeStore.toggleTheme">
-            <template #icon>
-              <n-icon size="20" :component="themeStore.isDark ? MoonOutline : SunnyOutline" />
-            </template>
+        <div class="flex items-center gap-3">
+          <n-button circle quaternary class="header-icon-btn" @click="themeStore.toggleTheme">
+            <template #icon><n-icon size="20" :component="themeStore.isDark ? MoonOutline : SunnyOutline" /></template>
           </n-button>
 
-          <!-- Notifications -->
-          <n-badge dot type="error" :offset="[-4, 4]">
-            <n-button circle quaternary class="header-btn">
-              <template #icon>
-                <n-icon size="20" :component="NotificationsOutline" />
-              </template>
+          <n-badge dot type="error" :offset="[-4, 4]" processing>
+            <n-button circle quaternary class="header-icon-btn">
+              <template #icon><n-icon size="20" :component="NotificationsOutline" /></template>
             </n-button>
           </n-badge>
 
-          <!-- Settings -->
-          <n-button circle quaternary class="header-btn">
-            <template #icon>
-              <n-icon size="20" :component="SettingsOutline" />
-            </template>
-          </n-button>
+          <n-divider vertical class="mx-2 opacity-10" />
 
-          <!-- User Avatar -->
           <n-dropdown
             trigger="click"
             :options="userMenuOptions"
@@ -124,20 +123,36 @@
             <n-avatar
               round
               size="medium"
-              :src="userStore.userInfo?.avatar || 'https://ui-avatars.com/api/?name=User&background=random'"
-              class="cursor-pointer ml-2 ring-2 ring-white/30 hover:ring-blue-400/50"
+              :src="userStore.userInfo?.avatar || 'https://ui-avatars.com/api/?name=User'"
+              class="cursor-pointer hover:scale-110 transition-transform ring-2 ring-white/10"
             />
           </n-dropdown>
         </div>
       </header>
 
-      <!-- Content Area -->
-      <main class="flex-1 overflow-y-auto p-4 pt-0 pr-4">
-        <div class="min-h-full">
+      <main class="flex-1 overflow-y-auto p-4 pt-0 custom-scrollbar">
+        <div class="glass-content-wrapper min-h-full transition-all duration-500">
           <router-view v-slot="{ Component, route }">
-            <transition name="page-fade" mode="out-in">
-              <component :is="Component" :key="route.fullPath" />
-            </transition>
+            <div class="min-h-full relative">
+              <transition name="page-stagger" mode="out-in">
+                <component
+                  v-if="isMenuLoaded || route.name !== 'NotFound'"
+                  :is="Component"
+                  :key="route.fullPath"
+                />
+              </transition>
+              <div
+                v-if="!isMenuLoaded && route.name === 'NotFound'"
+                class="absolute inset-0 p-6 flex flex-col gap-4 animate-pulse pointer-events-none"
+              >
+                <div class="h-8 w-64 rounded-xl bg-slate-200/70 dark:bg-slate-700/70"></div>
+                <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div class="rounded-2xl bg-slate-200/70 dark:bg-slate-800/70"></div>
+                  <div class="rounded-2xl bg-slate-200/70 dark:bg-slate-800/70"></div>
+                  <div class="rounded-2xl bg-slate-200/70 dark:bg-slate-800/70"></div>
+                </div>
+              </div>
+            </div>
           </router-view>
         </div>
       </main>
@@ -146,8 +161,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, h, type Component, watch, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+  import { ref, h, type Component, watch, onMounted } from 'vue'
+import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
 import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
@@ -158,7 +173,6 @@ import {
   Layers, 
   Search, 
   NotificationsOutline, 
-  SettingsOutline,
   SunnyOutline,
   MoonOutline,
   MenuOutline
@@ -168,6 +182,7 @@ const themeStore = useThemeStore()
 const userStore = useUserStore()
 const collapsed = ref(false)
 const message = useMessage()
+const isMenuLoaded = ref(false)
 
 
 function renderIcon(icon: Component) {
@@ -191,6 +206,82 @@ const userMenuOptions: DropdownOption[] = [
     key: 'logout'
   }
 ]
+
+const viewModules = import.meta.glob('../views/**/*.vue')
+let dynamicRoutesAdded = false
+
+/**
+ * 动态视图组件加载器
+ */
+function resolveViewComponent(component: string | null) {
+  const fallback = viewModules['../views/MissingComponent.vue']
+  if (!component) {
+    return fallback as () => Promise<Component>
+  }
+  const normalized = component.replace(/^\/+|\/+$/g, '')
+  const key = `../views/${normalized}/index.vue`
+  const loader = viewModules[key]
+  
+  if (!loader) {
+    console.warn(`[ViewResolver] 未找到组件文件: ${key}`)
+    return fallback as () => Promise<Component>
+  }
+
+  return loader as () => Promise<Component>
+}
+
+function transformMenuToRoutes(menus: MenuVO[], existingPaths: Set<string>): RouteRecordRaw[] {
+  const routes: RouteRecordRaw[] = []
+
+  const traverse = (items: MenuVO[]) => {
+    items.forEach(item => {
+      if (
+        item.menuType === 'C' &&
+        item.visible === 0 &&
+        item.status === 0 &&
+        item.path &&
+        !existingPaths.has(item.path)
+      ) {
+        routes.push({
+          path: item.path,
+          name: item.perms || item.path,
+          component: resolveViewComponent(item.component),
+          meta: {
+            title: item.menuName,
+            icon: item.icon,
+            perms: item.perms
+          }
+        })
+      }
+      if (item.children && item.children.length > 0) {
+        traverse(item.children)
+      }
+    })
+  }
+
+  traverse(menus)
+  return routes
+}
+
+function findFirstMenuPath(menus: MenuVO[]): string | null {
+  for (const item of menus) {
+    if (
+      item.menuType === 'C' &&
+      item.visible === 0 &&
+      item.status === 0 &&
+      item.path
+    ) {
+      return item.path
+    }
+    if (item.children && item.children.length > 0) {
+      const childPath = findFirstMenuPath(item.children)
+      if (childPath) {
+        return childPath
+      }
+    }
+  }
+  return null
+}
 
 function transformMenu(menus: MenuVO[]): MenuOption[] {
   return menus
@@ -240,7 +331,32 @@ onMounted(async () => {
     const res = await getUserMenuTree(userId)
     menuOptions.value = transformMenu(res)
 
-    // 展开包含当前路由的父菜单
+    if (!dynamicRoutesAdded) {
+      const existingPaths = new Set(router.getRoutes().map(r => r.path))
+      const dynamicRoutes = transformMenuToRoutes(res, existingPaths)
+      dynamicRoutes.forEach(routeRecord => {
+        router.addRoute('Root', routeRecord)
+      })
+      dynamicRoutesAdded = true
+
+      if (route.path === '/' || route.path === '') {
+        const firstPath = findFirstMenuPath(res)
+        if (firstPath) {
+          router.replace(firstPath)
+        }
+      }
+
+      if (route.name === 'NotFound' && route.path && route.path !== '/' && route.path !== '') {
+        const targetExists = router
+          .getRoutes()
+          .some(r => r.path === route.path && r.name !== 'NotFound')
+
+        if (targetExists) {
+          router.replace(route.fullPath)
+        }
+      }
+    }
+
     const currentPath = route.path
     const keysToExpand: string[] = []
 
@@ -270,6 +386,8 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('Failed to load menu', error)
+  } finally {
+    isMenuLoaded.value = true
   }
 })
 
@@ -307,305 +425,52 @@ async function handleUserMenuSelect(key: string) {
 </script>
 
 <style scoped>
-/* ============================================
-   浮动侧边栏 - 毛玻璃效果
-   ============================================ */
+/* 侧边栏浮动 */
 .floating-sidebar {
   height: calc(100vh - 32px);
   margin: 16px;
   border-radius: 24px;
-  flex-shrink: 0;
-}
-
-.glass-sidebar {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    var(--glass-shadow),
-    var(--glass-inset),
-    0 0 40px rgba(59, 130, 246, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--glass-shadow);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
 }
 
-.glass-sidebar:hover {
-  box-shadow:
-    var(--glass-shadow-hover),
-    var(--glass-inset),
-    0 0 60px rgba(59, 130, 246, 0.08);
-}
-
-/* ============================================
-   浮动头部 - 毛玻璃效果
-   ============================================ */
+/* 头部浮动 */
 .floating-header {
   height: 64px;
   margin: 16px 16px 16px 0;
   border-radius: 20px;
-  flex-shrink: 0;
-}
-
-.glass-header {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    var(--glass-shadow),
-    var(--glass-inset);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--glass-shadow);
 }
 
-/* ============================================
-   毛玻璃菜单样式
-   ============================================ */
-.glass-menu :deep(.n-menu) {
-  background: transparent !important;
-}
-
-.glass-menu :deep(.n-menu-item) {
-  margin: 4px 0;
-  border-radius: 12px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-menu :deep(.n-menu-item:hover) {
-  background: var(--glass-bg-light) !important;
-  transform: translateX(4px);
-}
-
-.glass-menu :deep(.n-menu-item-content--selected),
-.glass-menu :deep(.n-menu-item-content--child-active) {
-  background: linear-gradient(135deg,
-    rgba(59, 130, 246, 0.2) 0%,
-    rgba(147, 197, 253, 0.15) 100%) !important;
-  border-left: 3px solid #3b82f6;
-}
-
-.dark .glass-menu :deep(.n-menu-item-content--selected),
-.dark .glass-menu :deep(.n-menu-item-content--child-active) {
-  background: linear-gradient(135deg,
-    rgba(96, 165, 250, 0.25) 0%,
-    rgba(59, 130, 246, 0.15) 100%) !important;
-}
-
-.glass-menu :deep(.n-submenu-children) {
-  background: transparent !important;
-  border-radius: 8px;
-  margin: 4px 8px;
-  padding: 4px;
-}
-
-/* ============================================
-   毛玻璃输入框样式
-   ============================================ */
-.glass-input :deep(.n-input) {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid var(--glass-border-subtle) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-input :deep(.n-input:hover) {
-  background: var(--glass-bg) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.glass-input :deep(.n-input:focus-within) {
-  background: var(--glass-bg) !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), var(--glass-inset);
-}
-
-/* ============================================
-   毛玻璃小卡片样式
-   ============================================ */
-.glass-card-sm {
+/* 内容区容器 */
+.glass-content-wrapper {
   background: var(--glass-bg-light);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border-subtle);
-  border-radius: 14px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+  box-shadow: var(--glass-inset);
 }
 
-.glass-card-sm:hover {
-  background: var(--glass-bg);
-  border-color: var(--glass-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-}
-
-.dark .glass-card-sm:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-/* 用户卡片文字颜色 - 使用 CSS 变量自动适应主题 */
-.glass-card-sm .user-name {
-  color: var(--text-main);
-}
-
-.glass-card-sm .user-email {
-  color: var(--text-secondary);
-}
-
-/* ============================================
-   隐藏滚动条但保留滚动功能
-   ============================================ */
-.menu-scroll {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-.menu-scroll::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Opera */
-}
-
-/* ============================================
-   主内容区域样式
-   ============================================ */
-main {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-main::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Opera */
-}
-
-/* ============================================
-   按钮悬停效果增强
-   ============================================ */
-:deep(.n-button.n-button--quaternary-type) {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.n-button.n-button--quaternary-type:hover) {
-  background: var(--glass-bg-light) !important;
-  transform: scale(1.05);
-}
-
-:deep(.n-button.n-button--quaternary-type:active) {
-  transform: scale(0.98);
-}
-
-/* ============================================
-   头像悬停效果
-   ============================================ */
-:deep(.n-avatar) {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.n-avatar:hover) {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* ============================================
-   徽章动画
-   ============================================ */
-:deep(.n-badge-sup) {
-  animation: badge-pulse 2s infinite;
-}
-
-@keyframes badge-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-/* ============================================
-   Logo 文字渐变效果
-   ============================================ */
-.text-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ============================================
-   边框颜色自定义
-   ============================================ */
-.border-white\/20 {
-  border-color: var(--glass-border) !important;
-}
-
-/* ============================================
-   头部按钮统一样式
-   ============================================ */
-.header-btn {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.header-btn:hover {
-  background: var(--glass-bg-light) !important;
-  transform: scale(1.08);
-}
-
-.header-btn:active {
-  transform: scale(0.95);
-}
-
-/* ============================================
-   头像环形效果
-   ============================================ */
-.ring-white\/20 {
-  --tw-ring-color: var(--glass-border);
-}
-
-.ring-white\/30 {
-  --tw-ring-color: var(--glass-border);
-}
-
-.hover\:ring-blue-400\/50:hover {
-  --tw-ring-color: rgba(96, 165, 250, 0.5);
-}
-
-/* ============================================
-   过渡动画定义
-   ============================================ */
-
-/* 淡入滑动动画 */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(-10px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-10px);
+/* 菜单选中样式 */
+.glass-menu :deep(.n-menu-item-content--selected) {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%) !important;
 }
 
 /* 页面切换动画 */
-.page-fade-enter-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+.page-stagger-enter-active { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+.page-stagger-leave-active { transition: all 0.2s cubic-bezier(0.4, 0, 1, 1); }
+.page-stagger-enter-from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+.page-stagger-leave-to { opacity: 0; transform: translateY(-10px); filter: blur(4px); }
 
-.page-fade-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.page-fade-enter-from {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.page-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+/* 隐藏滚动条 */
+.menu-scroll::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 </style>

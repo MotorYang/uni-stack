@@ -1,595 +1,178 @@
 @import "tailwindcss";
 
 /* ============================================
-   毛玻璃 UI 全局样式 (Glassmorphism)
+    1. 核心变量与主题定义
    ============================================ */
-
-/* CSS 变量定义 */
 :root {
-  /* 毛玻璃效果参数 */
+  /* 基础参数 */
   --glass-blur: 20px;
-  --glass-blur-strong: 30px;
-  --glass-blur-light: 12px;
-
-  /* 浅色主题颜色 */
+  --glass-blur-heavy: 40px;
+  
+/* 浅色模式变量 */
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-bg-light: rgba(255, 255, 255, 0.5);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.5);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-border-subtle: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
-  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-
-  /* 文本颜色 */
+  --glass-bg-light: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-subtle: rgba(0, 0, 0, 0.04);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+  --glass-inset: inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  --glass-accent: #3b82f6;
+  
   --text-main: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
+  --text-sec: #6b7280;
 
-  /* 过渡动画时间 */
-  --transition-fast: 0.15s;
-  --transition-normal: 0.25s;
-  --transition-slow: 0.4s;
+  /* 动画曲线 */
   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s;
 }
 
-/* 深色主题变量 */
 .dark {
-  --glass-bg: rgba(30, 30, 45, 0.75);
-  --glass-bg-light: rgba(40, 40, 60, 0.6);
-  --glass-bg-heavy: rgba(25, 25, 40, 0.9);
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-bg-light: rgba(0, 0, 0, 0.2);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-border-subtle: rgba(255, 255, 255, 0.05);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.5);
-  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  /* 深色模式文本颜色 */
+  --glass-inset: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  --glass-accent: #00f2ff;
+  
   --text-main: #f3f4f6;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
+  --text-sec: #9ca3af;
 }
 
-/* ============================================
-   通用文本颜色类
-   ============================================ */
-.text-text-main {
-  color: var(--text-main);
-}
-
-.text-text-sec {
-  color: var(--text-secondary);
-}
-
-.text-text-muted {
-  color: var(--text-muted);
-}
-
-/* ============================================
-   基础页面样式
-   ============================================ */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  min-height: 100vh;
-  transition: background-color var(--transition-slow) var(--transition-timing);
-}
-
-/* 浅色主题渐变背景 */
-body:not(.dark) {
-  background: linear-gradient(135deg,
-    #e0e7ff 0%,
-    #f0f4ff 25%,
-    #faf5ff 50%,
-    #fef3f2 75%,
-    #fefce8 100%
-  );
-  background-attachment: fixed;
-}
-
-/* 深色主题渐变背景 */
-body.dark,
-.dark body {
-  background: linear-gradient(135deg,
-    #0f0f1a 0%,
-    #1a1a2e 25%,
-    #16213e 50%,
-    #1a1a2e 75%,
-    #0f0f1a 100%
-  );
-  background-attachment: fixed;
-}
-
-/* ============================================
-   Naive UI 组件毛玻璃覆盖
-   ============================================ */
-
-/* 通用毛玻璃效果混入类 */
-.glass-effect {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-/* Card 卡片组件 */
-.n-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-card:hover {
-  box-shadow: var(--glass-shadow-hover), var(--glass-inset);
-  transform: translateY(-2px);
-}
-
-.n-card__content {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Modal 模态框 */
-.n-modal,
-.n-modal-body-wrapper {
-  background: var(--glass-bg-heavy) !important;
-  /*backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);*/
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), var(--glass-inset);
-}
-
-/* Modal 使用 card preset 时的样式 */
-.n-modal.n-modal--card {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-.n-modal.n-modal--card > .n-card {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), var(--glass-inset);
-  border-radius: 20px;
-}
-
-.n-modal.n-modal--card > .n-card:hover {
-  transform: none;
-}
-
-/* Modal Mask 遮罩层 */
-.n-modal-mask {
-  background: rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Dialog 对话框 */
-.n-dialog {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), var(--glass-inset);
-}
-
-/* Drawer 抽屉 */
-.n-drawer {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(180%);
-}
-
-.n-drawer-mask {
-  background: rgba(0, 0, 0, 0.3) !important;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* Dropdown 下拉菜单 */
-.n-dropdown-menu {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-  overflow: hidden;
-}
-
-.n-dropdown-option {
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-.n-dropdown-option:hover {
-  background: var(--glass-bg-light) !important;
-}
-
-/* Popover 弹出框 */
-.n-popover:not(.n-popover--raw) {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-.n-popover__content {
-  background: transparent !important;
-}
-
-/* Select 选择器下拉 */
-.n-base-select-menu {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-.n-base-select-option {
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-/* Input 输入框 */
-.n-input {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light)) saturate(150%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-light)) saturate(150%);
-  border: 1px solid var(--glass-border-subtle) !important;
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-input:hover {
-  border-color: var(--glass-border) !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.n-input:focus-within,
-.n-input--focus {
-  background: var(--glass-bg) !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), var(--glass-inset);
-}
-
-/* Button 按钮 */
-.n-button {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-button--secondary-type {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-  border: 1px solid var(--glass-border-subtle) !important;
-}
-
-.n-button--secondary-type:hover {
-  background: var(--glass-bg) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.n-button--secondary-type:active {
-  transform: translateY(0);
-}
-
-.n-button--default-type {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-button--default-type:hover {
-  transform: translateY(-1px);
-}
-
-.n-button--primary-type:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-/* DataTable 数据表格 */
-.n-data-table {
-  background: transparent !important;
-}
-
-.n-data-table-wrapper {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.n-data-table-thead {
-  background: var(--glass-bg-heavy) !important;
-}
-
-.n-data-table-tr {
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-.n-data-table-tr:hover td {
-  background: var(--glass-bg-light) !important;
-}
-
-/* Menu 菜单 */
-.n-menu {
-  background: transparent !important;
-}
-
-.n-menu-item {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-menu-item:hover {
-  background: var(--glass-bg-light) !important;
-}
-
-.n-menu-item-content--selected {
-  background: rgba(59, 130, 246, 0.15) !important;
-}
-
-/* Tabs 标签页 */
-.n-tabs-nav {
-  background: transparent !important;
-}
-
-.n-tabs-tab {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-tabs-tab:hover {
-  background: var(--glass-bg-light) !important;
-}
-
-.n-tabs-tab--active {
-  background: var(--glass-bg) !important;
-}
-
-/* Message 消息提示 */
-.n-message {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-/* Notification 通知 */
+/* 激活全组件毛玻璃模糊感 */
+.n-card, 
+.n-modal, 
+.n-popover, 
+.n-dropdown-menu, 
+.n-base-select-menu, 
+.n-message,
 .n-notification {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
-/* Tag 标签 */
-.n-tag {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-  border: 1px solid var(--glass-border-subtle) !important;
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-.n-tag:hover {
-  background: var(--glass-bg) !important;
-}
-
-/* Pagination 分页 */
-.n-pagination-item {
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-.n-pagination-item:hover {
-  background: var(--glass-bg-light) !important;
-  transform: translateY(-1px);
-}
-
-.n-pagination-item--active {
-  background: rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Layout 布局 */
+/* 移除 Layout 默认背景色，露出底层的动态地图 */
 .n-layout {
   background: transparent !important;
 }
-
-.n-layout-sider {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border-right: 1px solid var(--glass-border) !important;
-}
-
-.n-layout-header {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border-bottom: 1px solid var(--glass-border) !important;
-}
-
-.n-layout-footer {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border-top: 1px solid var(--glass-border) !important;
-}
-
-/* Tooltip 提示框 */
-.n-tooltip {
-  background: var(--glass-bg-heavy) !important;
-  backdrop-filter: blur(var(--glass-blur-light)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-light)) saturate(180%);
-}
-
-/* Tree 树形控件 */
-.n-tree-node {
-  transition: all var(--transition-fast) var(--transition-timing);
-}
-
-.n-tree-node:hover {
-  background: var(--glass-bg-light) !important;
-}
-
-.n-tree-node--selected {
-  background: rgba(59, 130, 246, 0.1) !important;
-}
-
-/* Collapse 折叠面板 */
-.n-collapse-item {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-  border: 1px solid var(--glass-border-subtle) !important;
-  border-radius: 12px !important;
-  margin-bottom: 8px;
-  overflow: hidden;
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-collapse-item:hover {
-  background: var(--glass-bg) !important;
-}
-
-/* Form 表单 */
-.n-form-item-feedback-wrapper {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Switch 开关 */
-.n-switch {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Slider 滑块 */
-.n-slider {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* DatePicker 日期选择器面板 */
-.n-date-panel {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-/* TimePicker 时间选择器面板 */
-.n-time-picker-panel {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-/* ColorPicker 颜色选择器 */
-.n-color-picker-panel {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-}
-
-/* Cascader 级联选择 */
-.n-cascader-menu {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--glass-border) !important;
-}
-
-/* Upload 上传 */
-.n-upload-dragger {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-  border: 2px dashed var(--glass-border) !important;
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-upload-dragger:hover {
-  background: var(--glass-bg) !important;
-  border-color: #3b82f6 !important;
-}
-
-/* Spin 加载 */
-.n-spin-container .n-spin-content::after {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-}
-
-/* Empty 空状态 */
-.n-empty {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Result 结果页 */
-.n-result {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Steps 步骤条 */
-.n-steps {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Timeline 时间线 */
-.n-timeline {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Avatar 头像 */
-.n-avatar {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-.n-avatar:hover {
-  transform: scale(1.05);
-}
-
-/* Badge 徽标 */
-.n-badge {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Alert 警告提示 */
-.n-alert {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(var(--glass-blur-light));
-  -webkit-backdrop-filter: blur(var(--glass-blur-light));
-  border: 1px solid var(--glass-border-subtle) !important;
-}
-
-/* Progress 进度条 */
-.n-progress {
-  transition: all var(--transition-normal) var(--transition-timing);
-}
-
-/* Skeleton 骨架屏 */
-.n-skeleton {
-  background: var(--glass-bg-light) !important;
+.n-layout-scroll-container {
+  background: transparent !important;
 }
 
 /* ============================================
-   自定义滚动条样式
+    2. 虚拟地图动态背景 (Pure CSS Map)
+   ============================================ */
+.login-container {
+  background-color: #020617;
+  position: relative;
+  overflow: hidden;
+  perspective: 1200px;
+}
+
+.map-grid-wrapper {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  transform: rotateX(50deg) translateY(-15%);
+  transform-origin: top;
+  pointer-events: none;
+}
+
+.map-grid {
+  position: absolute;
+  width: 200%; height: 400%; left: -50%; top: 0;
+  background-image: 
+    linear-gradient(to right, var(--glass-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--glass-border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: mapMove 20s linear infinite;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 70%, transparent 100%);
+}
+
+@keyframes mapMove {
+  from { transform: translateY(0); }
+  to { transform: translateY(50px); }
+}
+
+/* ============================================
+    3. 全局组件美化 (Naive UI Overrides)
+   ============================================ */
+
+/* 通用毛玻璃卡片 */
+.n-card, .glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow);
+  transition: all var(--transition-normal) var(--transition-timing);
+  border-radius: 16px;
+}
+
+/* 卡片顶部高光线条 */
+.n-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  z-index: 10;
+}
+
+.n-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* 输入框科技感定制 */
+.n-input {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  transition: all 0.3s var(--transition-timing) !important;
+}
+
+.n-input:focus-within {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 0 15px var(--glass-accent) !important;
+  border-color: var(--glass-accent) !important;
+}
+
+/* 按钮渐变美化 */
+.n-button--primary-type {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 1px;
+}
+
+.dark .n-button--primary-type {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+}
+
+/* 数据表格美化 */
+.n-data-table-wrapper {
+  background: var(--glass-bg) !important;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.n-data-table-thead {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 消息通知玻璃化 */
+.n-message, .n-notification {
+  background: var(--glass-bg-heavy) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ============================================
+    4. 滚动条与辅助样式
    ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -597,96 +180,24 @@ body.dark,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--glass-bg-light);
-  border-radius: 4px;
-  transition: all var(--transition-fast) var(--transition-timing);
+  background: var(--glass-border);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-bg);
+  background: var(--glass-accent);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+/* 页面入场动画 */
+.glass-fade-in {
+  animation: fadeIn 0.8s var(--transition-timing);
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ============================================
-   动画效果
-   ============================================ */
-
-/* 淡入动画 */
-@keyframes glass-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 应用到主要容器 */
-.n-card,
-.n-modal,
-.n-dialog,
-.n-notification,
-.n-message {
-  animation: glass-fade-in var(--transition-normal) var(--transition-timing);
-}
-
-/* 脉冲光效动画 - 用于悬停效果 */
-@keyframes glass-pulse {
-  0%, 100% {
-    box-shadow: var(--glass-shadow), var(--glass-inset);
-  }
-  50% {
-    box-shadow: var(--glass-shadow-hover), var(--glass-inset), 0 0 20px rgba(59, 130, 246, 0.1);
-  }
-}
-
-/* ============================================
-   响应式优化
-   ============================================ */
-@media (max-width: 768px) {
-  :root {
-    --glass-blur: 16px;
-    --glass-blur-strong: 24px;
-    --glass-blur-light: 10px;
-  }
-}
-
-/* 对于不支持 backdrop-filter 的浏览器的降级处理 */
-@supports not (backdrop-filter: blur(20px)) {
-  .n-card,
-  .n-modal,
-  .n-dialog,
-  .n-drawer,
-  .n-dropdown-menu,
-  .n-popover,
-  .n-message,
-  .n-notification,
-  .n-layout-sider,
-  .n-layout-header,
-  .n-data-table-wrapper {
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .dark .n-card,
-  .dark .n-modal,
-  .dark .n-dialog,
-  .dark .n-drawer,
-  .dark .n-dropdown-menu,
-  .dark .n-popover,
-  .dark .n-message,
-  .dark .n-notification,
-  .dark .n-layout-sider,
-  .dark .n-layout-header,
-  .dark .n-data-table-wrapper {
-    background: rgba(30, 30, 45, 0.95) !important;
-  }
-}
+/* 针对深色模式文字微调 */
+.dark .text-text-main { color: #f3f4f6; }
+.dark .text-text-sec { color: #9ca3af; }

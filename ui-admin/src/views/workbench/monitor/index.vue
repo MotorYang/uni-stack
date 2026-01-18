@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, h, watch } from 'vue'
 import { NCard, NTag, NIcon, NButton, NDataTable, type DataTableColumns } from 'naive-ui'
-import { 
+import {
   ServerOutline,
   PulseOutline,
   WarningOutline,
@@ -115,7 +115,12 @@ import {
 } from '@vicons/ionicons5'
 import * as echarts from 'echarts'
 import { useThemeStore } from '@/stores/theme'
-import { getServiceRequestTrend, getServiceErrorRate, type ServiceRequestTrendPoint, type ServiceErrorRatePoint } from '@/api/dashboard'
+import {
+  getServiceRequestTrend,
+  getServiceErrorRate,
+  type ServiceRequestTrendPoint,
+  type ServiceErrorRatePoint
+} from '@/api/dashboard'
 
 const themeStore = useThemeStore()
 
@@ -194,7 +199,7 @@ const columns: DataTableColumns<ServiceMetric> = [
   {
     title: '服务名称',
     key: 'name',
-    render: (row) =>
+    render: row =>
       h('div', { class: 'flex flex-col' }, [
         h('span', { class: 'font-medium text-text-main' }, row.name),
         h('span', { class: 'text-xs text-text-sec' }, row.group)
@@ -219,15 +224,25 @@ const columns: DataTableColumns<ServiceMetric> = [
   {
     title: '状态',
     key: 'status',
-    render: (row) => {
+    render: row => {
       const type = row.status === 'healthy' ? 'success' : row.status === 'warning' ? 'warning' : 'error'
       const icon =
-        row.status === 'healthy' ? CheckmarkCircleOutline : row.status === 'warning' ? AlertCircleOutline : TimeOutline
+        row.status === 'healthy'
+          ? CheckmarkCircleOutline
+          : row.status === 'warning'
+          ? AlertCircleOutline
+          : TimeOutline
       const label =
         row.status === 'healthy' ? '健康' : row.status === 'warning' ? '需关注' : '异常'
       return h(
         NTag,
-        { type, size: 'small', round: true, bordered: false, icon: () => h(NIcon, null, { default: () => h(icon) }) },
+        {
+          type,
+          size: 'small',
+          round: true,
+          bordered: false,
+          icon: () => h(NIcon, null, { default: () => h(icon) })
+        },
         { default: () => label }
       )
     }
@@ -256,41 +271,33 @@ const initRequestChart = () => {
         count: 100 + Math.round(Math.random() * 200)
       }))
 
-  const hours = data.map((item) => item.time)
-  const values = data.map((item) => item.count)
+  const hours = data.map(item => item.time)
+  const values = data.map(item => item.count)
 
   const option = {
-    grid: {
-      top: '10%',
-      left: '3%',
-      right: '4%',
-      bottom: '6%',
-      containLabel: true
-    },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-      borderColor: isDark ? 'rgba(148, 163, 184, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
       textStyle: {
-        color: isDark ? '#F9FAFB' : '#111827'
+        color: isDark ? '#F3F4F6' : '#111827'
       }
     },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
       data: hours,
+      axisLabel: { color: textColor },
       axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: { color: textColor }
+      axisTick: { show: false }
     },
     yAxis: {
       type: 'value',
+      axisLabel: { color: textColor },
       splitLine: {
         lineStyle: {
           color: splitLineColor
         }
-      },
-      axisLabel: { color: textColor }
+      }
     },
     series: [
       {
@@ -304,7 +311,7 @@ const initRequestChart = () => {
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(79, 70, 229, 0.3)' },
+            { offset: 0, color: 'rgba(79, 70, 229, 0.25)' },
             { offset: 1, color: 'rgba(79, 70, 229, 0)' }
           ])
         },
@@ -323,66 +330,58 @@ const initErrorChart = () => {
 
   const isDark = themeStore.isDark
   const textColor = isDark ? '#9CA3AF' : '#6B7280'
-  const splitLineColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)'
 
-  const hasApiErrorData = errorRateData.value.length > 0
-  const names = hasApiErrorData ? errorRateData.value.map((item) => item.serviceName) : services.value.map((s) => s.name)
-  const errorRates = hasApiErrorData ? errorRateData.value.map((item) => item.errorRate) : services.value.map((s) => s.errorRate)
+  const data = errorRateData.value.length
+    ? errorRateData.value
+    : [
+        { serviceName: 'auth-service', errorRate: 0.4 },
+        { serviceName: 'gateway', errorRate: 1.1 },
+        { serviceName: 'order-service', errorRate: 0.9 },
+        { serviceName: 'job-scheduler', errorRate: 2.3 },
+        { serviceName: 'log-service', errorRate: 0.3 }
+      ]
+
+  const servicesNames = data.map(item => item.serviceName)
+  const values = data.map(item => item.errorRate)
 
   const option = {
-    grid: {
-      top: '10%',
-      left: '3%',
-      right: '4%',
-      bottom: '12%',
-      containLabel: true
-    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
       },
-      backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-      borderColor: isDark ? 'rgba(148, 163, 184, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
       textStyle: {
-        color: isDark ? '#F9FAFB' : '#111827'
+        color: isDark ? '#F3F4F6' : '#111827'
       }
     },
     xAxis: {
       type: 'category',
-      data: names,
-      axisLabel: {
-        color: textColor,
-        rotate: 20
-      },
-      axisTick: { show: false },
-      axisLine: { show: false }
+      data: servicesNames,
+      axisLabel: { color: textColor }
     },
     yAxis: {
       type: 'value',
       axisLabel: {
         color: textColor,
         formatter: '{value}%'
-      },
-      splitLine: {
-        lineStyle: {
-          color: splitLineColor
-        }
       }
     },
     series: [
       {
-        name: '错误率',
+        data: values,
         type: 'bar',
-        data: errorRates,
+        barWidth: 18,
         itemStyle: {
           borderRadius: [6, 6, 0, 0],
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(248, 113, 113, 0.95)' },
-            { offset: 1, color: 'rgba(248, 113, 113, 0.35)' }
-          ])
-        },
-        barWidth: '50%'
+          color: (params: any) => {
+            const value = params.value as number
+            if (value > 2) return '#EF4444'
+            if (value > 1) return '#F97316'
+            return '#22C55E'
+          }
+        }
       }
     ]
   }
@@ -390,37 +389,37 @@ const initErrorChart = () => {
   errorChart.setOption(option)
 }
 
-const loadMonitorData = async () => {
+const loadRequestTrend = async () => {
   try {
-    const [trendRes, errorRes] = await Promise.all([
-      getServiceRequestTrend(),
-      getServiceErrorRate()
-    ])
-    requestTrendData.value = trendRes.points
-    errorRateData.value = errorRes.points
+    const res = await getServiceRequestTrend()
+    requestTrendData.value = res.points
   } catch (error) {
-    console.error('Failed to load service monitor data', error)
-  } finally {
-    initRequestChart()
-    initErrorChart()
+    console.error('Failed to load request trend data', error)
   }
 }
 
-watch(
-  () => themeStore.isDark,
-  () => {
-    initRequestChart()
-    initErrorChart()
+const loadErrorRate = async () => {
+  try {
+    const res = await getServiceErrorRate()
+    errorRateData.value = res.points
+  } catch (error) {
+    console.error('Failed to load error rate data', error)
   }
-)
+}
+
+const initCharts = () => {
+  initRequestChart()
+  initErrorChart()
+}
 
 const handleResize = () => {
   requestChart?.resize()
   errorChart?.resize()
 }
 
-onMounted(() => {
-  loadMonitorData()
+onMounted(async () => {
+  await Promise.all([loadRequestTrend(), loadErrorRate()])
+  initCharts()
   window.addEventListener('resize', handleResize)
 })
 
@@ -429,4 +428,12 @@ onUnmounted(() => {
   requestChart?.dispose()
   errorChart?.dispose()
 })
+
+watch(
+  () => themeStore.isDark,
+  () => {
+    initCharts()
+  }
+)
 </script>
+

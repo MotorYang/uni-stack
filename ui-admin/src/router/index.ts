@@ -4,49 +4,14 @@ import type { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
+    name: 'Root',
     component: () => import('@/layouts/DefaultLayout.vue'),
     children: [
       {
-        path: '',
-        redirect: '/workbench/dashboard'
-      },
-      {
-        path: '/workbench/dashboard',
-        name: 'Dashboard',
-        component: () => import('@/views/HomeView.vue'),
-      },
-      {
-        path: '/workbench/monitor',
-        name: 'ServiceMonitor',
-        component: () => import('@/views/ServiceMonitorView.vue'),
-      },
-      {
         path: '/profile',
         name: 'Profile',
-        component: () => import('@/views/ProfileView.vue'),
+        component: () => import('@/views/profile/index.vue'),
       },
-      // 安全治理
-      {
-        path: '/security/user',
-        name: 'UserManage',
-        component: () => import('@/views/security/UserManageView.vue'),
-      },
-      {
-        path: '/security/dept',
-        name: 'DeptManage',
-        component: () => import('@/views/security/DeptManageView.vue'),
-      },
-      {
-        path: '/security/role',
-        name: 'RoleManage',
-        component: () => import('@/views/security/RoleManageView.vue'),
-      },
-      {
-        path: '/security/menu',
-        name: 'MenuManage',
-        component: () => import('@/views/security/MenuManageView.vue'),
-      },
-      // Catch-all route for undefined paths within the layout
       {
         path: ':pathMatch(.*)*',
         name: 'NotFound',
