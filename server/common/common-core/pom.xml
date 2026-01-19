@@ -31,6 +31,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Feign Core -->
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+        </dependency>
+
         <!-- Validation (for GlobalExceptionHandler) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

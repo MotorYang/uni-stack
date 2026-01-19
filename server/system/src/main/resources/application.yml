@@ -24,4 +24,5 @@ spring:
 
   config:
     import:
+      - nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
       - nacos:system.yaml?group=DEFAULT_GROUP&refreshEnabled=true

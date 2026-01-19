@@ -23,6 +23,7 @@ spring:
 
   config:
     import:
+      - nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
       - nacos:auth.yaml?group=DEFAULT_GROUP&refreshEnabled=true
     openfeign:
       client:

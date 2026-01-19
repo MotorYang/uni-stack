@@ -50,6 +50,10 @@
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
+.n-notification-main__header {
+  color: #D03050 !important;
+}
+
 /* 移除 Layout 默认背景色，露出底层的动态地图 */
 .n-layout {
   background: transparent !important;
