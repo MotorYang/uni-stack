@@ -36,6 +36,7 @@
         <uuid-gen.version>5.0.0</uuid-gen.version>
         <minio.version>8.5.14</minio.version>
         <bcprov.version>1.78.1</bcprov.version>
+        <knife4j.version>4.3.0</knife4j.version>
     </properties>
 
     <dependencyManagement>
@@ -133,15 +134,31 @@
                 <artifactId>common-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- uuid7 -->
             <dependency>
                 <groupId>com.fasterxml.uuid</groupId>
                 <artifactId>java-uuid-generator</artifactId>
                 <version>${uuid-gen.version}</version>
             </dependency>
+            <!-- Minio 本地部署的文件仓库 -->
             <dependency>
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+
+            <!-- knife4j 内部微服务使用 -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+            <!-- knife4j 网关使用 -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

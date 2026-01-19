@@ -53,4 +53,15 @@ public class InternalSecretFilter extends OncePerRequestFilter {
             response.getWriter().write("{\"code\": 403, \"msg\": \"非法访问!\"}");
         }
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        System.out.println("当前正在请求的路径:" + path);
+        // 只要是访问文档相关的路径，都不执行这个过滤器的校验逻辑
+        return path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/knife4j")
+                || path.contains("/webjars");
+    }
 }

@@ -41,7 +41,13 @@ public class SecurityConfig {
                 .addFilterBefore(internalFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // 内部 API 接口（供其他服务调用）
-                        .requestMatchers("/api/internal/**").permitAll()
+                        .requestMatchers(
+                                "/api/internal/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/doc.html"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 

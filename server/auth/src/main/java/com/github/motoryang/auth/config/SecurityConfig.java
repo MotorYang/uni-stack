@@ -39,7 +39,16 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .addFilterBefore(internalFilter, UsernamePasswordAuthenticationFilter.class) // 认证前校验是否是网关发来的请求
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/refresh", "/logout", "/captcha").permitAll()
+                        .requestMatchers(
+                                "/login",
+                                "/refresh",
+                                "/logout",
+                                "/captcha",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/doc.html"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 
