@@ -10,11 +10,11 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>auth</artifactId>
+    <artifactId>monitor</artifactId>
     <packaging>jar</packaging>
 
-    <name>UniStack Auth</name>
-    <description>Authentication Service - JWT Dual-Token Management</description>
+    <name>UniStack Monitor</name>
+    <description>Monitor Service - Spring Boot Admin Server for Microservices Monitoring</description>
 
     <dependencies>
         <!-- Common Core Module -->
@@ -23,10 +23,10 @@
             <artifactId>common-core</artifactId>
         </dependency>
 
-        <!-- Common Redis Module -->
+        <!-- Spring Boot Admin Server -->
         <dependency>
-            <groupId>com.github.motoryang</groupId>
-            <artifactId>common-redis</artifactId>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-server</artifactId>
         </dependency>
 
         <!-- Spring Boot Web -->
@@ -41,12 +41,6 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Validation -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-
         <!-- Nacos Discovery -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
@@ -59,47 +53,11 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-        <!-- OpenFeign -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <!-- LoadBalancer -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
-
-        <!-- Redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- knife4j 内部微服务使用 -->
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-        </dependency>
-
-        <!-- Spring Boot Admin Client -->
-        <dependency>
-            <groupId>de.codecentric</groupId>
-            <artifactId>spring-boot-admin-starter-client</artifactId>
-        </dependency>
-
-        <!-- Actuator -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
 

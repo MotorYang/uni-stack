@@ -18,6 +18,7 @@
         <module>auth</module>
         <module>gateway</module>
         <module>storage</module>
+        <module>monitor</module>
     </modules>
 
     <properties>
@@ -37,6 +38,7 @@
         <minio.version>8.5.14</minio.version>
         <bcprov.version>1.78.1</bcprov.version>
         <knife4j.version>4.3.0</knife4j.version>
+        <spring-boot-admin.version>3.3.4</spring-boot-admin.version>
     </properties>
 
     <dependencyManagement>
@@ -159,6 +161,19 @@
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
+            </dependency>
+
+            <!-- Spring Boot Admin Server -->
+            <dependency>
+                <groupId>de.codecentric</groupId>
+                <artifactId>spring-boot-admin-starter-server</artifactId>
+                <version>${spring-boot-admin.version}</version>
+            </dependency>
+            <!-- Spring Boot Admin Client -->
+            <dependency>
+                <groupId>de.codecentric</groupId>
+                <artifactId>spring-boot-admin-starter-client</artifactId>
+                <version>${spring-boot-admin.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

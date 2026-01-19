@@ -1,0 +1,30 @@
+# ============================================================
+# Monitor 服务网关路由配置示例
+# 请将以下配置添加到 Nacos 中的 gateway.yaml 配置文件
+# ============================================================
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # Monitor 监控中心路由
+        - id: monitor
+          uri: lb://monitor
+          predicates:
+            - Path=/monitor/**
+          filters:
+            - StripPrefix=1
+
+      # 白名单配置（如果需要免登录访问 monitor 的某些接口）
+      # 注意：通过网关访问时会自动携带 X-Internal-Token，monitor 会自动完成认证
+      whitelist:
+        # 如果想让 monitor 的 instances 接口免登录（由网关内部密钥保护）
+        # - /monitor/instances
+        # - /monitor/instances/**
+
+# ============================================================
+# 使用说明：
+# 1. 通过网关访问 monitor：GET http://localhost:8080/monitor/instances
+# 2. 网关会自动添加 X-Internal-Token 头，monitor 验证后自动完成认证
+# 3. Postman 测试时无需额外配置，直接访问网关端口即可
+# ============================================================

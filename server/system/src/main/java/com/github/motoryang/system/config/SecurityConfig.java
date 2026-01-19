@@ -40,13 +40,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(internalFilter, UsernamePasswordAuthenticationFilter.class) // 认证前校验是否是网关发来的请求
                 .authorizeHttpRequests(auth -> auth
-                        // 内部 API 接口（供其他服务调用）
                         .requestMatchers(
                                 "/api/internal/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/doc.html"
+                                "/doc.html",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

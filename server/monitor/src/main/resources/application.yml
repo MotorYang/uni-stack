@@ -1,0 +1,70 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: monitor
+
+  # JDK 21 虚拟线程优化
+  threads:
+    virtual:
+      enabled: true
+
+  # Spring Security 登录配置
+  security:
+    user:
+      name: ${MONITOR_USER:admin}
+      password: ${MONITOR_PASSWORD:admin123}
+
+  cloud:
+    nacos:
+      username: uni-stack
+      password: 745700Yxy@
+      discovery:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        # 监控服务的元数据，用于 Spring Boot Admin 识别
+        metadata:
+          management:
+            context-path: /actuator
+      config:
+        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        file-extension: yaml
+
+  config:
+    import:
+      - optional:nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:monitor.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+
+  boot:
+    admin:
+      # Spring Boot Admin Server 配置
+      ui:
+        title: UniStack Monitor
+        brand: <img src="assets/img/icon-spring-boot-admin.svg"><span>UniStack Monitor</span>
+      # 通过 Nacos 服务发现自动注册客户端
+      discovery:
+        # 忽略网关服务（按需求不监控网关）
+        ignored-services:
+          - gateway
+
+# Actuator 端点配置（Monitor 服务自身的监控端点）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# 内部服务鉴权密钥（需与网关和其他微服务保持一致）
+auth:
+  internal:
+    secret: xC9D9HgFrjye4jjAbzLwXsUQKpVfFPXx
+
+logging:
+  level:
+    de.codecentric.boot.admin: INFO
+    com.github.motoryang.monitor: DEBUG
