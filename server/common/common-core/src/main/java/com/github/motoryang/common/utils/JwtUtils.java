@@ -8,6 +8,8 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ public final class JwtUtils {
     public static final String CLAIM_USER_ID = "userId";
     public static final String CLAIM_USERNAME = "username";
     public static final String CLAIM_TOKEN_TYPE = "tokenType";
+    public static final String CLAIM_ROLES = "roles";
     public static final String TOKEN_TYPE_ACCESS = "access";
     public static final String TOKEN_TYPE_REFRESH = "refresh";
 
@@ -31,12 +34,14 @@ public final class JwtUtils {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static String createAccessToken(String userId, String username, String secret, long expireMillis) {
-        return createToken(Map.of(
-                CLAIM_USER_ID, userId,
-                CLAIM_USERNAME, username,
-                CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS
-        ), secret, expireMillis);
+    public static String createAccessToken(String userId, String username, List<String> roles,
+                                            String secret, long expireMillis) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_USER_ID, userId);
+        claims.put(CLAIM_USERNAME, username);
+        claims.put(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS);
+        claims.put(CLAIM_ROLES, roles);
+        return createToken(claims, secret, expireMillis);
     }
 
     public static String createRefreshToken(String userId, String username, String secret, long expireMillis) {
@@ -84,6 +89,15 @@ public final class JwtUtils {
     public static String getUsername(String token, String secret) {
         Claims claims = parseToken(token, secret);
         return claims.get(CLAIM_USERNAME, String.class);
+    }
+
+    /**
+     * 从 Token 获取角色列表
+     */
+    @SuppressWarnings("unchecked")
+    public static List<String> getRoles(String token, String secret) {
+        Claims claims = parseToken(token, secret);
+        return claims.get(CLAIM_ROLES, List.class);
     }
 
     /**

@@ -31,4 +31,14 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
 
     @Select("SELECT role_id FROM sys_user_role WHERE user_id = #{userId}")
     List<String> selectRoleIdsByUserId(@Param("userId") String userId);
+
+    /**
+     * 查询用户的角色编码列表
+     */
+    @Select("""
+            SELECT r.role_key FROM sys_role r
+            INNER JOIN sys_user_role ur ON r.id = ur.role_id
+            WHERE ur.user_id = #{userId} AND r.status = 0 AND r.deleted = 0
+            """)
+    List<String> selectRoleKeysByUserId(@Param("userId") String userId);
 }

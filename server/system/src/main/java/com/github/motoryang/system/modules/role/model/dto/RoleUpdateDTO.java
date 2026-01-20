@@ -20,6 +20,8 @@ public record RoleUpdateDTO(
 
         String remark,
 
-        List<String> menuIds
+        List<String> menuIds,
+
+        List<String> permissionIds
 ) {
 }

@@ -5,6 +5,7 @@ import com.github.motoryang.gateway.constants.Constants;
 import com.github.motoryang.gateway.utils.PublicResourceMatcher;
 import com.github.motoryang.gateway.utils.TokenUtils;
 import com.github.motoryang.gateway.utils.WhiteListMatcher;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * 全局认证过滤器
@@ -62,14 +64,17 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         try {
             // 解析 Claims
-            var claims = TokenUtils.parseToken(token, secretBytes);
-            var userId = claims.get("userId", String.class);
-            var username = claims.get("username", String.class);
+            Claims claims = TokenUtils.parseToken(token, secretBytes);
+            String userId = claims.get("userId", String.class);
+            String username = claims.get("username", String.class);
+            @SuppressWarnings("unchecked")
+            List<String> roles = claims.get("roles", List.class);
+            String rolesStr = roles != null ? String.join(",", roles) : "";
 
-            // 一次性获取并校验，使用 Reactive 方式
+            // 校验 Redis 中的 Token，并获取权限列表
             return reactiveStringRedisTemplate.opsForValue()
                     .get(RedisConstants.REDIS_TOKEN_KEY + userId)
-                    .defaultIfEmpty("EMPTY") // 防止返回 Mono.empty() 导致后续逻辑不执行
+                    .defaultIfEmpty("EMPTY")
                     .flatMap(redisToken -> {
                         if ("EMPTY".equals(redisToken)) {
                             return TokenUtils.unauthorized(exchange, "登录已过期");
@@ -77,12 +82,22 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         if (!redisToken.equals(token)) {
                             return TokenUtils.unauthorized(exchange, "账号已在别处登录");
                         }
-                        // 成功后构建 Request
-                        var mutatedRequest = request.mutate()
-                                .header(Constants.USER_ID_HEADER, userId)
-                                .header(Constants.USERNAME_HEADER, username)
-                                .build();
-                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                        // 从 Redis 获取权限列表
+                        return reactiveStringRedisTemplate.opsForSet()
+                                .members(RedisConstants.REDIS_USER_PERMS_KEY + userId)
+                                .collectList()
+                                .map(perms -> String.join(",", perms))
+                                .defaultIfEmpty("")
+                                .flatMap(permsStr -> {
+                                    // 构建带有用户信息的 Request
+                                    var mutatedRequest = request.mutate()
+                                            .header(Constants.USER_ID_HEADER, userId)
+                                            .header(Constants.USERNAME_HEADER, username)
+                                            .header(Constants.USER_ROLES_HEADER, rolesStr)
+                                            .header(Constants.USER_PERMS_HEADER, permsStr)
+                                            .build();
+                                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                                });
                     });
 
         } catch (ExpiredJwtException e) {

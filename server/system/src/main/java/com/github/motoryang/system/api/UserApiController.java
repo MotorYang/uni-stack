@@ -1,6 +1,8 @@
 package com.github.motoryang.system.api;
 
 import com.github.motoryang.common.core.result.RestResult;
+import com.github.motoryang.system.modules.permission.mapper.PermissionMapper;
+import com.github.motoryang.system.modules.relation.mapper.UserRoleMapper;
 import com.github.motoryang.system.modules.user.entity.User;
 import com.github.motoryang.system.modules.user.service.IUserService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 用户内部 API 控制器（供其他服务调用）
@@ -27,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserApiController {
 
     private final IUserService userService;
+    private final UserRoleMapper userRoleMapper;
+    private final PermissionMapper permissionMapper;
 
     /**
      * 根据用户名获取用户信息（用于登录认证）
@@ -43,12 +49,19 @@ public class UserApiController {
             return RestResult.fail(1001, "用户不存在");
         }
 
+        // 查询用户的角色编码列表
+        List<String> roles = userRoleMapper.selectRoleKeysByUserId(user.getId());
+        // 查询用户的权限编码列表
+        List<String> permissions = permissionMapper.selectPermCodesByUserId(user.getId());
+
         UserAuthInfo authInfo = new UserAuthInfo(
                 user.getId(),
                 user.getUsername(),
                 user.getPassword(),
                 user.getNickname(),
-                user.getStatus()
+                user.getStatus(),
+                roles,
+                permissions
         );
 
         return RestResult.ok(authInfo);
@@ -57,11 +70,13 @@ public class UserApiController {
     /**
      * 用户认证信息
      *
-     * @param id       用户ID
-     * @param username 用户名
-     * @param password 密码（加密后）
-     * @param nickname 昵称
-     * @param status   状态（0-禁用，1-正常）
+     * @param id          用户ID
+     * @param username    用户名
+     * @param password    密码（加密后）
+     * @param nickname    昵称
+     * @param status      状态（0-禁用，1-正常）
+     * @param roles       角色编码列表
+     * @param permissions 权限编码列表
      */
     @Schema(description = "用户认证信息")
     public record UserAuthInfo(
@@ -74,7 +89,11 @@ public class UserApiController {
             @Schema(description = "昵称")
             String nickname,
             @Schema(description = "状态（0-禁用，1-正常）")
-            Integer status
+            Integer status,
+            @Schema(description = "角色编码列表")
+            List<String> roles,
+            @Schema(description = "权限编码列表")
+            List<String> permissions
     ) {
     }
 }

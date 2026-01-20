@@ -182,4 +182,34 @@ VALUES (@user_admin, @role_admin);
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT @role_admin, id FROM sys_menu;
 
+-- ============================================
+-- 7. 初始化权限数据示例
+-- ============================================
+INSERT INTO sys_permission (id, perm_name, perm_code, description, sort, status, create_time, deleted) VALUES
+-- 用户管理权限
+(UUID(), '用户查询', 'user:read', '查询用户列表和详情', 1, 0, NOW(6), 0),
+(UUID(), '用户新增', 'user:create', '新增用户', 2, 0, NOW(6), 0),
+(UUID(), '用户编辑', 'user:update', '编辑用户信息', 3, 0, NOW(6), 0),
+(UUID(), '用户删除', 'user:delete', '删除用户', 4, 0, NOW(6), 0),
+-- 角色管理权限
+(UUID(), '角色查询', 'role:read', '查询角色列表和详情', 10, 0, NOW(6), 0),
+(UUID(), '角色新增', 'role:create', '新增角色', 11, 0, NOW(6), 0),
+(UUID(), '角色编辑', 'role:update', '编辑角色信息', 12, 0, NOW(6), 0),
+(UUID(), '角色删除', 'role:delete', '删除角色', 13, 0, NOW(6), 0),
+-- 菜单管理权限
+(UUID(), '菜单查询', 'menu:read', '查询菜单列表和详情', 20, 0, NOW(6), 0),
+(UUID(), '菜单新增', 'menu:create', '新增菜单', 21, 0, NOW(6), 0),
+(UUID(), '菜单编辑', 'menu:update', '编辑菜单信息', 22, 0, NOW(6), 0),
+(UUID(), '菜单删除', 'menu:delete', '删除菜单', 23, 0, NOW(6), 0),
+-- 部门管理权限
+(UUID(), '部门查询', 'dept:read', '查询部门列表和详情', 30, 0, NOW(6), 0),
+(UUID(), '部门新增', 'dept:create', '新增部门', 31, 0, NOW(6), 0),
+(UUID(), '部门编辑', 'dept:update', '编辑部门信息', 32, 0, NOW(6), 0),
+(UUID(), '部门删除', 'dept:delete', '删除部门', 33, 0, NOW(6), 0),
+-- 权限管理权限
+(UUID(), '权限查询', 'permission:read', '查询权限列表和详情', 40, 0, NOW(6), 0),
+(UUID(), '权限新增', 'permission:create', '新增权限', 41, 0, NOW(6), 0),
+(UUID(), '权限编辑', 'permission:update', '编辑权限信息', 42, 0, NOW(6), 0),
+(UUID(), '权限删除', 'permission:delete', '删除权限', 43, 0, NOW(6), 0);
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -4,10 +4,9 @@ export interface MenuVO {
   id: string
   parentId: string
   menuName: string
-  menuType: 'M' | 'C' | 'B'  // 'M' 目录, 'C' 菜单, 'B' 按钮
+  menuType: 'M' | 'C'  // 'M' 目录, 'C' 菜单
   path: string
   component: string | null
-  perms: string | null
   icon: string | null
   sort: number
   visible: number  // 0=显示, 1=隐藏
@@ -25,10 +24,9 @@ export interface MenuQueryDTO {
 export interface MenuCreateDTO {
   parentId: string
   menuName: string
-  menuType: 'M' | 'C' | 'B'
+  menuType: 'M' | 'C'
   path?: string
   component?: string
-  perms?: string
   icon?: string
   sort?: number
   visible?: number
@@ -38,10 +36,9 @@ export interface MenuCreateDTO {
 export interface MenuUpdateDTO {
   parentId?: string
   menuName?: string
-  menuType?: 'M' | 'C' | 'B'
+  menuType?: 'M' | 'C'
   path?: string
   component?: string
-  perms?: string
   icon?: string
   sort?: number
   visible?: number

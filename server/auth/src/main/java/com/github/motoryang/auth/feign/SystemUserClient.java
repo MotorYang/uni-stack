@@ -6,6 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.List;
+
 /**
  * System 服务用户接口 Feign Client
  */
@@ -16,14 +18,16 @@ public interface SystemUserClient {
      * 根据用户名获取用户信息（用于登录认证）
      */
     @GetMapping("/user/username/{username}")
-    RestResult<UserAuthInfo> getUserByUsername(@PathVariable("username") String username);
+    RestResult<UserAuthInfo> getUserByUsername(@PathVariable String username);
 
     record UserAuthInfo(
             String id,
             String username,
             String password,
             String nickname,
-            Integer status
+            Integer status,
+            List<String> roles,
+            List<String> permissions
     ) {
     }
 }

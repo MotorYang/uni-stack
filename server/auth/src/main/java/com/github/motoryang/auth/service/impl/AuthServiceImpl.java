@@ -20,7 +20,10 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * 认证服务实现
@@ -63,9 +66,9 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
         }
 
-        // 4. 生成token并存入Redis
-        TokenVO tokenVO = generateTokens(user.id(), user.username());
-        saveTokenToRedis(user.id(), tokenVO);
+        // 4. 生成token并存入Redis（Token 中携带角色信息）
+        TokenVO tokenVO = generateTokens(user.id(), user.username(), user.roles());
+        saveTokenToRedis(user.id(), tokenVO, user.permissions());
 
         return tokenVO;
     }
@@ -85,12 +88,18 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(ResultCode.TOKEN_INVALID);
         }
 
-        String userId = JwtUtils.getUserId(refreshToken, jwtSecret);
         String username = JwtUtils.getUsername(refreshToken, jwtSecret);
 
-        // 3. 生成新的Token并存入redis
-        TokenVO tokenVO = generateTokens(userId, username);
-        saveTokenToRedis(userId, tokenVO);
+        // 3. 重新获取用户信息（包含最新的角色和权限）
+        RestResult<UserAuthInfo> result = systemUserClient.getUserByUsername(username);
+        if (!result.isSuccess() || result.data() == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+        UserAuthInfo user = result.data();
+
+        // 4. 生成新的Token并存入redis
+        TokenVO tokenVO = generateTokens(user.id(), user.username(), user.roles());
+        saveTokenToRedis(user.id(), tokenVO, user.permissions());
 
         return tokenVO;
     }
@@ -101,30 +110,40 @@ public class AuthServiceImpl implements IAuthService {
             return;
         }
 
-        // 将token和用户从Redis移除
+        // 将token、权限缓存从Redis移除
         try {
             String userId = JwtUtils.getUserId(accessToken, jwtSecret);
             redisTemplate.delete(RedisConstants.REDIS_TOKEN_KEY + userId);
             redisTemplate.delete(RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId);
+            redisTemplate.delete(RedisConstants.REDIS_USER_PERMS_KEY + userId);
         } catch (Exception e) {
             log.warn("Token 已过期或无效: {}", e.getMessage());
         }
     }
 
-    private TokenVO generateTokens(String userId, String username) {
-        String accessToken = JwtUtils.createAccessToken(userId, username, jwtSecret, accessTokenExpire);
+    private TokenVO generateTokens(String userId, String username, List<String> roles) {
+        String accessToken = JwtUtils.createAccessToken(userId, username, roles, jwtSecret, accessTokenExpire);
         String refreshToken = JwtUtils.createRefreshToken(userId, username, jwtSecret, refreshTokenExpire);
 
         return new TokenVO(accessToken, refreshToken, accessTokenExpire / 1000);
     }
 
-    private void saveTokenToRedis(String userId, TokenVO tokenVO) {
+    private void saveTokenToRedis(String userId, TokenVO tokenVO, List<String> permissions) {
         var tokenKey = RedisConstants.REDIS_TOKEN_KEY + userId;
         var refreshKey = RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId;
+        var permsKey = RedisConstants.REDIS_USER_PERMS_KEY + userId;
+
         redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             var stringConn = (StringRedisConnection) connection;
-            stringConn.setEx(tokenKey, (int)(accessTokenExpire/1000), tokenVO.accessToken());
-            stringConn.setEx(refreshKey, (int)(refreshTokenExpire/1000), tokenVO.refreshToken());
+            stringConn.setEx(tokenKey, (int) (accessTokenExpire / 1000), tokenVO.accessToken());
+            stringConn.setEx(refreshKey, (int) (refreshTokenExpire / 1000), tokenVO.refreshToken());
+
+            // 存储权限列表到 Redis Set
+            if (!CollectionUtils.isEmpty(permissions)) {
+                stringConn.del(permsKey);
+                stringConn.sAdd(permsKey, permissions.toArray(new String[0]));
+                stringConn.expire(permsKey, (int) (accessTokenExpire / 1000));
+            }
             return null;
         });
     }

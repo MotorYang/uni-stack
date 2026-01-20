@@ -18,6 +18,8 @@ public class Constants {
      */
     public static final String USER_ID_HEADER = "X-User-Id";
     public static final String USERNAME_HEADER = "X-Username";
+    public static final String USER_ROLES_HEADER = "X-User-Roles";
+    public static final String USER_PERMS_HEADER = "X-User-Perms";
     public static final String INTERNAL_TOKEN_HEADER = "X-Internal-Token";
 
 }

@@ -14,6 +14,7 @@ public record RoleDetailVO(
         Integer status,
         String remark,
         List<String> menuIds,
+        List<String> permissionIds,
         LocalDateTime createTime,
         LocalDateTime updateTime
 ) {

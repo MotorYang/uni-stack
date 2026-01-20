@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.system.modules.relation.entity.RoleMenu;
+import com.github.motoryang.system.modules.relation.entity.RolePermission;
 import com.github.motoryang.system.modules.relation.mapper.RoleMenuMapper;
+import com.github.motoryang.system.modules.relation.mapper.RolePermissionMapper;
 import com.github.motoryang.system.modules.relation.entity.UserRole;
 import com.github.motoryang.system.modules.relation.mapper.UserRoleMapper;
 import com.github.motoryang.system.modules.role.converter.RoleConverter;
@@ -40,6 +42,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
 
     private final RoleConverter roleConverter;
     private final RoleMenuMapper roleMenuMapper;
+    private final RolePermissionMapper rolePermissionMapper;
     private final UserMapper userMapper;
     private final UserConverter userConverter;
     private final UserRoleMapper userRoleMapper;
@@ -78,6 +81,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         }
 
         List<String> menuIds = roleMenuMapper.selectMenuIdsByRoleId(id);
+        List<String> permissionIds = rolePermissionMapper.selectPermissionIdsByRoleId(id);
 
         return new RoleDetailVO(
                 role.getId(),
@@ -87,6 +91,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
                 role.getStatus(),
                 role.getRemark(),
                 menuIds,
+                permissionIds,
                 role.getCreateTime(),
                 role.getUpdateTime()
         );
@@ -105,6 +110,11 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         // 保存角色菜单关联
         if (!CollectionUtils.isEmpty(dto.menuIds())) {
             saveRoleMenus(role.getId(), dto.menuIds());
+        }
+
+        // 保存角色权限关联
+        if (!CollectionUtils.isEmpty(dto.permissionIds())) {
+            saveRolePermissions(role.getId(), dto.permissionIds());
         }
 
         return roleConverter.toVO(role);
@@ -136,6 +146,14 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
             }
         }
 
+        // 更新角色权限关联
+        if (dto.permissionIds() != null) {
+            rolePermissionMapper.deleteByRoleId(id);
+            if (!dto.permissionIds().isEmpty()) {
+                saveRolePermissions(id, dto.permissionIds());
+            }
+        }
+
         return roleConverter.toVO(role);
     }
 
@@ -149,6 +167,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
 
         // 删除角色菜单关联
         roleMenuMapper.deleteByRoleId(id);
+        // 删除角色权限关联
+        rolePermissionMapper.deleteByRoleId(id);
 
         // 逻辑删除角色
         removeById(id);
@@ -218,5 +238,17 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
                 })
                 .toList();
         roleMenuMapper.insertBatch(roleMenus);
+    }
+
+    private void saveRolePermissions(String roleId, List<String> permissionIds) {
+        List<RolePermission> rolePermissions = permissionIds.stream()
+                .map(permissionId -> {
+                    RolePermission rp = new RolePermission();
+                    rp.setRoleId(roleId);
+                    rp.setPermissionId(permissionId);
+                    return rp;
+                })
+                .toList();
+        rolePermissionMapper.insertBatch(rolePermissions);
     }
 }

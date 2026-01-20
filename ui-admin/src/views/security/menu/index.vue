@@ -74,7 +74,7 @@
               </div>
             </div>
             <n-space>
-              <n-button v-if="selectedMenu.menuType !== 'B'" type="info" size="small" @click="handleAdd(selectedMenu)">
+              <n-button type="info" size="small" @click="handleAdd(selectedMenu)">
                 <template #icon><n-icon><AddOutline /></n-icon></template>
                 新增子级
               </n-button>
@@ -129,10 +129,6 @@
                 <n-text code v-if="selectedMenu.component">{{ selectedMenu.component }}</n-text>
                 <span v-else class="text-gray-400">-</span>
               </n-descriptions-item>
-              <n-descriptions-item label="权限标识" :span="2">
-                <n-text code v-if="selectedMenu.perms">{{ selectedMenu.perms }}</n-text>
-                <span v-else class="text-gray-400">-</span>
-              </n-descriptions-item>
               <n-descriptions-item label="显示状态">
                 <n-tag :type="selectedMenu.visible === 0 ? 'success' : 'default'" size="small">
                   {{ selectedMenu.visible === 0 ? '显示' : '隐藏' }}
@@ -166,7 +162,7 @@
                     </n-tag>
                   </div>
                   <div class="text-xs text-gray-500 mt-1 truncate">
-                    {{ child.path || child.perms || '-' }}
+                    {{ child.path || '-' }}
                   </div>
                 </div>
               </div>
@@ -216,24 +212,20 @@
             <n-space>
               <n-radio value="M">目录</n-radio>
               <n-radio value="C">菜单</n-radio>
-              <n-radio value="B">按钮</n-radio>
             </n-space>
           </n-radio-group>
         </n-form-item>
         <n-form-item label="菜单名称" path="menuName">
           <n-input v-model:value="formData.menuName" placeholder="请输入菜单名称" />
         </n-form-item>
-        <n-form-item v-if="formData.menuType !== 'B'" label="菜单图标" path="icon">
+        <n-form-item label="菜单图标" path="icon">
           <IconPicker v-model="formData.icon" placeholder="请输入图标名称，如 HomeOutline" />
         </n-form-item>
-        <n-form-item v-if="formData.menuType !== 'B'" label="路由地址" path="path">
+        <n-form-item label="路由地址" path="path">
           <n-input v-model:value="formData.path" placeholder="请输入路由地址，如 /security/user" />
         </n-form-item>
         <n-form-item v-if="formData.menuType === 'C'" label="组件路径" path="component">
           <n-input v-model:value="formData.component" placeholder="请输入组件路径，如 security/user/index" />
-        </n-form-item>
-        <n-form-item v-if="formData.menuType !== 'M'" label="权限标识" path="perms">
-          <n-input v-model:value="formData.perms" placeholder="请输入权限标识，如 security:user:view" />
         </n-form-item>
         <n-form-item label="显示排序" path="sort">
           <n-input-number v-model:value="formData.sort" :min="0" :max="999" class="!w-full" />
@@ -325,10 +317,9 @@ import {
 
 const message = useMessage()
 
-const menuTypeConfig: Record<MenuVO['menuType'], { label: string; type: 'info' | 'success' | 'warning' }> = {
+const menuTypeConfig: Record<MenuVO['menuType'], { label: string; type: 'info' | 'success' }> = {
   'M': { label: '目录', type: 'info' },
-  'C': { label: '菜单', type: 'success' },
-  'B': { label: '按钮', type: 'warning' }
+  'C': { label: '菜单', type: 'success' }
 }
 
 const searchKeyword = ref('')
@@ -383,7 +374,6 @@ const menuTreeOptions = computed<TreeSelectOption[]>(() => {
   ]
   const buildOptions = (menus: MenuVO[]): TreeSelectOption[] => {
     return menus
-      .filter(menu => menu.menuType !== 'B')
       .map(menu => ({
         key: menu.id,
         label: menu.menuName,
@@ -521,7 +511,6 @@ const formData = reactive<MenuCreateDTO & MenuUpdateDTO>({
   menuType: 'M',
   path: '',
   component: '',
-  perms: '',
   icon: '',
   sort: 0,
   visible: 0,
@@ -538,12 +527,8 @@ const formRules: FormRules = {
   ],
   path: [
     {
-      validator: (_rule, value) => {
-        if (formData.menuType !== 'B' && !value) {
-          return new Error('请输入路由地址')
-        }
-        return true
-      },
+      required: true,
+      message: '请输入路由地址',
       trigger: 'blur'
     }
   ]
@@ -558,7 +543,6 @@ const handleAdd = (parent: MenuVO | null) => {
     menuType: parent ? 'C' : 'M',
     path: '',
     component: '',
-    perms: '',
     icon: '',
     sort: 0,
     visible: 0,
@@ -576,7 +560,6 @@ const handleEdit = (menu: MenuVO) => {
     menuType: menu.menuType,
     path: menu.path || '',
     component: menu.component || '',
-    perms: menu.perms || '',
     icon: menu.icon || '',
     sort: menu.sort,
     visible: menu.visible,
@@ -601,7 +584,6 @@ const handleSubmit = async () => {
         menuType: formData.menuType,
         path: formData.path || undefined,
         component: formData.component || undefined,
-        perms: formData.perms || undefined,
         icon: formData.icon || undefined,
         sort: formData.sort,
         visible: formData.visible,
@@ -613,10 +595,9 @@ const handleSubmit = async () => {
       const createData: MenuCreateDTO = {
         parentId: formData.parentId!,
         menuName: formData.menuName!,
-        menuType: formData.menuType as 'M' | 'C' | 'B',
+        menuType: formData.menuType as 'M' | 'C',
         path: formData.path || undefined,
         component: formData.component || undefined,
-        perms: formData.perms || undefined,
         icon: formData.icon || undefined,
         sort: formData.sort,
         visible: formData.visible,

@@ -24,8 +24,8 @@ CREATE TABLE sys_dept (
     status TINYINT DEFAULT 0 COMMENT '状态（0正常 1停用）',
     create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
     update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建者',
-    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+    update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
     deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
     PRIMARY KEY (id),
     KEY idx_sys_dept_parent_id (parent_id),
@@ -49,8 +49,8 @@ CREATE TABLE sys_user (
     dept_id CHAR(36) DEFAULT NULL COMMENT '部门ID',
     create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
     update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建者',
-    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+    update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
     deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
     PRIMARY KEY (id),
     UNIQUE KEY uk_username (username),
@@ -71,8 +71,8 @@ CREATE TABLE sys_role (
     remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
     create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
     update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建者',
-    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+    update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
     deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
     PRIMARY KEY (id),
     UNIQUE KEY uk_role_key (role_key),
@@ -90,15 +90,14 @@ CREATE TABLE sys_menu (
     menu_type CHAR(1) DEFAULT '' COMMENT '菜单类型（M目录 C菜单 F按钮）',
     path VARCHAR(255) DEFAULT '' COMMENT '路由地址',
     component VARCHAR(255) DEFAULT NULL COMMENT '组件路径',
-    perms VARCHAR(100) DEFAULT NULL COMMENT '权限标识',
     icon VARCHAR(100) DEFAULT '#' COMMENT '菜单图标',
     sort INT DEFAULT 0 COMMENT '显示顺序',
     visible TINYINT DEFAULT 0 COMMENT '显示状态（0显示 1隐藏）',
     status TINYINT DEFAULT 0 COMMENT '状态（0正常 1停用）',
     create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
     update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建者',
-    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+    update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
     deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
     PRIMARY KEY (id),
     KEY idx_sys_menu_parent_id (parent_id),
@@ -130,3 +129,35 @@ CREATE TABLE sys_role_menu (
     PRIMARY KEY (role_id, menu_id),
     KEY idx_sys_role_menu_menu_id (menu_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='角色菜单关联表';
+
+-- ============================================
+-- 7. 创建权限表
+-- ============================================
+DROP TABLE IF EXISTS sys_permission;
+CREATE TABLE sys_permission (
+                                id CHAR(36) NOT NULL COMMENT '权限ID',
+                                perm_name VARCHAR(50) NOT NULL COMMENT '权限名称',
+                                perm_code VARCHAR(100) NOT NULL COMMENT '权限编码（如 user:read, user:write）',
+                                description VARCHAR(200) DEFAULT NULL COMMENT '权限描述',
+                                sort INT DEFAULT 0 COMMENT '显示顺序',
+                                status TINYINT DEFAULT 0 COMMENT '状态（0正常 1停用）',
+                                create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
+                                update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
+                                create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+                                update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
+                                deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
+                                PRIMARY KEY (id),
+                                UNIQUE KEY uk_perm_code (perm_code),
+                                KEY idx_sys_permission_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='权限表';
+
+-- ============================================
+-- 8. 创建角色权限关联表
+-- ============================================
+DROP TABLE IF EXISTS sys_role_permission;
+CREATE TABLE sys_role_permission (
+                                     role_id CHAR(36) NOT NULL COMMENT '角色ID',
+                                     permission_id CHAR(36) NOT NULL COMMENT '权限ID',
+                                     PRIMARY KEY (role_id, permission_id),
+                                     KEY idx_sys_role_permission_permission_id (permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='角色权限关联表';
