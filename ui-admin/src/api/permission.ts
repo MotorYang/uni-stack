@@ -92,3 +92,17 @@ export const deletePermission = (id: string): Promise<void> => {
 export const deletePermissionBatch = (ids: string[]): Promise<void> => {
   return request.delete<any, void>('/system/permissions/batch', { data: ids })
 }
+
+/**
+ * 获取权限关联的资源ID列表
+ */
+export const getPermissionResourceIds = (permissionId: string): Promise<string[]> => {
+  return request.get<any, string[]>(`/system/permissions/${permissionId}/resources`)
+}
+
+/**
+ * 分配资源给权限
+ */
+export const assignResourcesToPermission = (permissionId: string, resourceIds: string[]): Promise<void> => {
+  return request.post<any, void>(`/system/permissions/${permissionId}/resources`, resourceIds)
+}

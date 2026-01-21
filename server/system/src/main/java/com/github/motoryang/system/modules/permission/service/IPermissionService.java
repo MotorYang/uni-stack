@@ -52,4 +52,14 @@ public interface IPermissionService {
      * 根据用户ID查询权限编码列表
      */
     List<String> getPermCodesByUserId(String userId);
+
+    /**
+     * 关联资源到权限
+     */
+    void assignResourcesToPermission(String permissionId, List<String> resourceIds);
+
+    /**
+     * 根据权限ID查询关联的资源ID列表
+     */
+    List<String> getResourcesByPermissionId(String permissionId);
 }

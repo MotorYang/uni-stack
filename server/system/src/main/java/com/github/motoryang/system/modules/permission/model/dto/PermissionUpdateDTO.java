@@ -2,6 +2,7 @@ package com.github.motoryang.system.modules.permission.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 /**
  * 权限更新 DTO
@@ -20,6 +21,8 @@ public record PermissionUpdateDTO(
 
         Integer sort,
 
-        Integer status
+        Integer status,
+        
+        List<String> resourceIds
 ) {
 }

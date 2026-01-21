@@ -164,9 +164,36 @@
               <h4 class="font-semibold text-blue-400 mb-2">使用说明</h4>
               <ul class="text-sm text-gray-400 space-y-1">
                 <li>权限编码格式建议：<n-text code>模块:操作</n-text>，如 <n-text code>user:read</n-text></li>
-                <li>在角色管理中为角色分配权限</li>
-                <li>后端接口可通过 <n-text code>@PreAuthorize</n-text> 注解进行权限控制</li>
+                <li>在<n-text code> 角色管理 </n-text>中为角色分配权限，在<n-text code> 权限管理 </n-text>中为权限分配资源</li>
               </ul>
+            </div>
+
+            <!-- Resource Allocation Card -->
+            <div class="mt-6 glass-card !p-4 border border-gray-200/10">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-semibold text-text-main">关联资源</h4>
+                <n-button size="small" type="primary" @click="handleAssignResources">
+                  <template #icon><n-icon><LinkOutline /></n-icon></template>
+                  分配资源
+                </n-button>
+              </div>
+              <div v-if="assignedResources.length > 0" class="space-y-2">
+                <div v-for="res in assignedResources" :key="res.id" class="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 transition-colors">
+                  <div class="flex items-center gap-2">
+                    <n-tag :type="res.resType === 'API' ? 'info' : 'warning'" size="small" class="mr-2">
+                      {{ res.resType }}
+                    </n-tag>
+                    <span class="text-sm text-text-main">{{ res.resName }}</span>
+                    <n-text code class="text-xs text-gray-500">{{ res.resPath }}</n-text>
+                  </div>
+                  <n-tag v-if="res.resType === 'API'" :type="getMethodType(res.resMethod)" size="tiny">
+                    {{ res.resMethod }}
+                  </n-tag>
+                </div>
+              </div>
+              <div v-else class="text-center py-4 text-gray-400 text-sm">
+                暂无关联资源
+              </div>
             </div>
           </div>
         </template>
@@ -234,6 +261,94 @@
         </n-space>
       </template>
     </n-modal>
+
+    <!-- Resource Assignment Modal -->
+    <n-modal
+      v-model:show="showResourceModal"
+      title="分配资源"
+      preset="card"
+      style="width: 800px; height: 600px;"
+      :mask-closable="false"
+      class="flex flex-col"
+    >
+      <div class="flex h-full gap-4">
+        <!-- Left: Resource Groups -->
+        <div class="w-1/3 border-r pr-4 flex flex-col">
+          <n-input v-model:value="resourceGroupSearch" placeholder="搜索资源组" class="mb-2" clearable>
+            <template #prefix><n-icon><SearchOutline /></n-icon></template>
+          </n-input>
+          <div class="flex-1 overflow-y-auto">
+            <n-spin :show="loadingGroups">
+              <div class="space-y-1">
+                <div
+                  v-for="group in filteredResourceGroups"
+                  :key="group.id"
+                  :class="[
+                    'p-2 rounded cursor-pointer text-sm flex justify-between items-center',
+                    selectedResourceGroup?.id === group.id ? 'bg-blue-500/10 text-blue-500' : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                  ]"
+                  @click="handleSelectResourceGroup(group)"
+                >
+                  <span>{{ group.resGroupName }}</span>
+                  <n-tag size="tiny" :bordered="false">{{ group.resourceCount }}</n-tag>
+                </div>
+              </div>
+            </n-spin>
+          </div>
+        </div>
+
+        <!-- Right: Resources -->
+        <div class="flex-1 flex flex-col">
+          <div class="mb-2 flex justify-between items-center">
+             <n-input v-model:value="resourceSearch" placeholder="搜索资源" class="w-48" size="small" clearable>
+               <template #prefix><n-icon><SearchOutline /></n-icon></template>
+             </n-input>
+             <div class="text-xs text-gray-500">
+               已选 {{ checkedResourceIds.length }} 个资源
+             </div>
+          </div>
+          <div class="flex-1 overflow-y-auto border rounded p-2">
+             <n-spin :show="loadingResources">
+               <n-checkbox-group v-model:value="checkedResourceIds">
+                 <div class="space-y-2">
+                   <div v-if="!selectedResourceGroup" class="text-center text-gray-400 py-10">
+                     请选择左侧资源组
+                   </div>
+                   <div v-else-if="filteredResources.length === 0" class="text-center text-gray-400 py-10">
+                     暂无资源
+                   </div>
+                   <div v-else v-for="res in filteredResources" :key="res.id" class="flex items-start gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded">
+                     <n-checkbox :value="res.id" class="mt-1" />
+                     <div class="flex-1">
+                       <div class="flex items-center gap-2">
+                         <span class="font-medium">{{ res.resName }}</span>
+                         <n-tag :type="res.resType === 'API' ? 'info' : 'warning'" size="tiny" :bordered="false">
+                           {{ res.resType }}
+                         </n-tag>
+                         <n-tag v-if="res.resType === 'API'" :type="getMethodType(res.resMethod)" size="tiny" :bordered="false">
+                           {{ res.resMethod }}
+                         </n-tag>
+                       </div>
+                       <div class="text-xs text-gray-500 mt-1 font-mono break-all">
+                         {{ res.resPath }}
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </n-checkbox-group>
+             </n-spin>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showResourceModal = false">取消</n-button>
+          <n-button type="primary" :loading="submittingResources" @click="handleSubmitResources">
+            确定
+          </n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -258,9 +373,12 @@ import {
   NSpin,
   NPagination,
   NPopconfirm,
+  NCheckbox,
+  NCheckboxGroup,
   useMessage,
   type FormInst,
-  type FormRules
+  type FormRules,
+  type TagProps
 } from 'naive-ui'
 import {
   SearchOutline,
@@ -268,18 +386,30 @@ import {
   AddOutline,
   CreateOutline,
   TrashOutline,
-  KeyOutline
+  KeyOutline,
+  LinkOutline
 } from '@vicons/ionicons5'
 import {
   getPermissionPage,
   createPermission,
   updatePermission,
   deletePermission,
+  getPermissionResourceIds,
+  assignResourcesToPermission,
   type PermissionVO,
   type PermissionQueryDTO,
   type PermissionCreateDTO,
   type PermissionUpdateDTO
 } from '@/api/permission'
+import {
+  getResourceGroupList,
+  type ResourceGroupVO
+} from '@/api/resource-group'
+import {
+  getResourcePage,
+  getResourceDetail,
+  type ResourceVO
+} from '@/api/resource'
 
 const message = useMessage()
 
@@ -331,6 +461,19 @@ const formRules: FormRules = {
   ]
 }
 
+// Resource Assignment State
+const showResourceModal = ref(false)
+const loadingGroups = ref(false)
+const resourceGroups = ref<ResourceGroupVO[]>([])
+const resourceGroupSearch = ref('')
+const selectedResourceGroup = ref<ResourceGroupVO | null>(null)
+const loadingResources = ref(false)
+const groupResources = ref<ResourceVO[]>([])
+const resourceSearch = ref('')
+const checkedResourceIds = ref<string[]>([])
+const submittingResources = ref(false)
+const assignedResources = ref<ResourceVO[]>([]) // To display in details panel
+
 // Load permissions
 const loadPermissions = async () => {
   loading.value = true
@@ -377,8 +520,9 @@ const handlePageSizeChange = (size: number) => {
   loadPermissions()
 }
 
-const handleSelectPermission = (perm: PermissionVO) => {
+const handleSelectPermission = async (perm: PermissionVO) => {
   selectedPermission.value = perm
+  await loadAssignedResources(perm.id)
 }
 
 // Add permission
@@ -460,6 +604,149 @@ const handleDelete = async (perm: PermissionVO) => {
   } catch (error) {
     message.error('删除失败')
   }
+}
+
+// Resource Assignment Logic
+const loadAssignedResources = async (permId: string) => {
+  try {
+    const ids = await getPermissionResourceIds(permId)
+    // Since we only get IDs, we might need to fetch details or just store IDs if we don't want to fetch all details
+    // For display purposes in the card, ideally we should have resource details.
+    // However, fetching details for all IDs one by one is inefficient.
+    // A better approach would be an API that returns List<ResourceVO> for a permission.
+    // Assuming we only have getPermissionResourceIds for now, we can try to fetch details if the list is small,
+    // or maybe we need to rely on what we have.
+    // For now, let's just store IDs and maybe we can't display full details in the card without extra API calls.
+    // Wait, I can use getResourcePage to search by IDs if the API supported it, but it doesn't seem to.
+    // Let's assume for now we just want to show the count or we need to fetch them.
+    // Actually, let's try to fetch details for the IDs.
+    // Optimization: If the list is long, this will be slow.
+    // Let's just fetch the IDs for the modal state.
+    // For the display card, we might need a new API endpoint or just show the count.
+    // But the requirement says "add a card panel to add resources", implying we should see them.
+    // Let's try to fetch details for a few of them or all if not too many.
+
+    // NOTE: In a real scenario, I would ask backend to provide `getPermissionResources(permId)`.
+    // Since I cannot change backend easily (I am assuming), I will try to fetch details for the IDs.
+    // But wait, I can only call `getResourceDetail`.
+    // Let's just fetch the IDs for now and maybe not show full details in the card unless I have them.
+    // Or, I can load all resources when opening the modal.
+
+    // Let's implement `handleAssignResources` to open the modal and load necessary data.
+    // For the card display, I will leave it empty or just show a count if I can't get details easily.
+    // Actually, I can try to fetch details for the assigned resources if the number is small.
+
+    // Let's just fetch IDs for now.
+    // assignedResources.value = [] // Reset
+    // const detailsPromises = ids.map(id => getResourceDetail(id))
+    // const details = await Promise.all(detailsPromises)
+    // assignedResources.value = details
+
+    // To avoid too many requests, let's just fetch the IDs and when the user clicks "Assign Resources",
+    // we load the groups and resources.
+
+    // However, to show the list in the card, I really need the details.
+    // I will try to fetch them.
+    if (ids.length > 0) {
+       const detailsPromises = ids.map(id => getResourceDetail(id))
+       assignedResources.value = await Promise.all(detailsPromises)
+    } else {
+       assignedResources.value = []
+    }
+
+  } catch (error) {
+    console.error('Failed to load assigned resources', error)
+    assignedResources.value = []
+  }
+}
+
+const handleAssignResources = async () => {
+  if (!selectedPermission.value) return
+  showResourceModal.value = true
+
+  // Load current assignments
+  try {
+    const ids = await getPermissionResourceIds(selectedPermission.value.id)
+    checkedResourceIds.value = ids
+  } catch (error) {
+    message.error('加载已分配资源失败')
+  }
+
+  // Load resource groups if not loaded
+  if (resourceGroups.value.length === 0) {
+    loadResourceGroups()
+  }
+}
+
+const loadResourceGroups = async () => {
+  loadingGroups.value = true
+  try {
+    resourceGroups.value = await getResourceGroupList()
+  } catch (error) {
+    message.error('加载资源组失败')
+  } finally {
+    loadingGroups.value = false
+  }
+}
+
+const filteredResourceGroups = computed(() => {
+  if (!resourceGroupSearch.value) return resourceGroups.value
+  const keyword = resourceGroupSearch.value.toLowerCase()
+  return resourceGroups.value.filter(g => g.resGroupName.toLowerCase().includes(keyword))
+})
+
+const handleSelectResourceGroup = async (group: ResourceGroupVO) => {
+  selectedResourceGroup.value = group
+  loadingResources.value = true
+  try {
+    // Fetch all resources for this group
+    // We use a large page size to get all
+    const res = await getResourcePage({
+      groupId: group.id,
+      size: 1000
+    })
+    groupResources.value = res.records
+  } catch (error) {
+    message.error('加载资源失败')
+  } finally {
+    loadingResources.value = false
+  }
+}
+
+const filteredResources = computed(() => {
+  if (!resourceSearch.value) return groupResources.value
+  const keyword = resourceSearch.value.toLowerCase()
+  return groupResources.value.filter(r =>
+    r.resName.toLowerCase().includes(keyword) ||
+    r.resPath.toLowerCase().includes(keyword)
+  )
+})
+
+const handleSubmitResources = async () => {
+  if (!selectedPermission.value) return
+  submittingResources.value = true
+  try {
+    await assignResourcesToPermission(selectedPermission.value.id, checkedResourceIds.value)
+    message.success('分配资源成功')
+    showResourceModal.value = false
+    // Reload assigned resources for display
+    await loadAssignedResources(selectedPermission.value.id)
+  } catch (error) {
+    message.error('分配资源失败')
+  } finally {
+    submittingResources.value = false
+  }
+}
+
+const getMethodType = (method: string): TagProps['type'] => {
+  const map: Record<string, TagProps['type']> = {
+    'GET': 'success',
+    'POST': 'info',
+    'PUT': 'warning',
+    'DELETE': 'error',
+    '*': 'default'
+  }
+  return map[method] || 'default'
 }
 
 onMounted(() => {

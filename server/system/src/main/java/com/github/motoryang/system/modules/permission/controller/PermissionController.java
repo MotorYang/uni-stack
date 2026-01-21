@@ -78,4 +78,19 @@ public class PermissionController {
         permissionService.deleteBatch(ids);
         return RestResult.ok();
     }
+
+    @Operation(summary = "获取权限关联的资源ID列表")
+    @GetMapping("/{permissionId}/resources")
+    public RestResult<List<String>> getPermissionResources(@Parameter(description = "权限ID") @PathVariable String permissionId) {
+        return RestResult.ok(permissionService.getResourcesByPermissionId(permissionId));
+    }
+
+    @Operation(summary = "关联资源到权限")
+    @PostMapping("/{permissionId}/resources")
+    public RestResult<Void> assignResourcesToPermission(
+            @Parameter(description = "权限ID") @PathVariable String permissionId,
+            @Parameter(description = "资源ID列表") @RequestBody List<String> resourceIds) {
+        permissionService.assignResourcesToPermission(permissionId, resourceIds);
+        return RestResult.ok();
+    }
 }

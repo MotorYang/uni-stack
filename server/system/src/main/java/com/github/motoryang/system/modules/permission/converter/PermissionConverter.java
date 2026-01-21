@@ -5,6 +5,7 @@ import com.github.motoryang.system.modules.permission.model.dto.PermissionCreate
 import com.github.motoryang.system.modules.permission.model.dto.PermissionUpdateDTO;
 import com.github.motoryang.system.modules.permission.model.vo.PermissionVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -19,6 +20,7 @@ public interface PermissionConverter {
 
     PermissionConverter INSTANCE = Mappers.getMapper(PermissionConverter.class);
 
+    @Mapping(target = "resourceIds", ignore = true)
     PermissionVO toVO(Permission permission);
 
     List<PermissionVO> toVOList(List<Permission> permissions);

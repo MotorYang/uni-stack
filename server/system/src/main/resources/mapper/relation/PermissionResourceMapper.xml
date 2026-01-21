@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.motoryang.system.modules.relation.mapper.PermissionResourceMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO sys_permission_resource (perm_id, res_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.permId}, #{item.resId})
+        </foreach>
+    </insert>
+
+</mapper>

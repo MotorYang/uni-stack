@@ -1,6 +1,7 @@
 package com.github.motoryang.system.modules.permission.model.vo;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 权限 VO
@@ -12,6 +13,7 @@ public record PermissionVO(
         String description,
         Integer sort,
         Integer status,
-        LocalDateTime createTime
+        LocalDateTime createTime,
+        List<String> resourceIds
 ) {
 }

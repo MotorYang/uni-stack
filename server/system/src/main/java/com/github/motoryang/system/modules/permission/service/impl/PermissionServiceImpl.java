@@ -13,12 +13,15 @@ import com.github.motoryang.system.modules.permission.model.dto.PermissionQueryD
 import com.github.motoryang.system.modules.permission.model.dto.PermissionUpdateDTO;
 import com.github.motoryang.system.modules.permission.model.vo.PermissionVO;
 import com.github.motoryang.system.modules.permission.service.IPermissionService;
+import com.github.motoryang.system.modules.relation.entity.PermissionResource;
+import com.github.motoryang.system.modules.relation.mapper.PermissionResourceMapper;
 import com.github.motoryang.system.modules.relation.mapper.RolePermissionMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +33,7 @@ public class PermissionServiceImpl implements IPermissionService {
 
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
+    private final PermissionResourceMapper permissionResourceMapper;
     private final PermissionConverter permissionConverter;
 
     @Override
@@ -56,7 +60,19 @@ public class PermissionServiceImpl implements IPermissionService {
         if (permission == null) {
             throw new BusinessException(ResultCode.NOT_FOUND);
         }
-        return permissionConverter.toVO(permission);
+        PermissionVO vo = permissionConverter.toVO(permission);
+        // 获取关联的资源ID列表
+        List<String> resourceIds = permissionResourceMapper.selectResourceIdsByPermissionId(id);
+        return new PermissionVO(
+                vo.id(),
+                vo.permName(),
+                vo.permCode(),
+                vo.description(),
+                vo.sort(),
+                vo.status(),
+                vo.createTime(),
+                resourceIds
+        );
     }
 
     @Override
@@ -88,6 +104,23 @@ public class PermissionServiceImpl implements IPermissionService {
 
         permissionConverter.updateEntity(dto, permission);
         permissionMapper.updateById(permission);
+
+        // 更新权限资源关联
+        if (dto.resourceIds() != null) {
+            // 先删除旧的关联
+            permissionResourceMapper.deleteByPermissionId(id);
+            // 插入新的关联
+            if (!dto.resourceIds().isEmpty()) {
+                List<PermissionResource> list = new ArrayList<>();
+                for (String resourceId : dto.resourceIds()) {
+                    PermissionResource pr = new PermissionResource();
+                    pr.setPermId(id);
+                    pr.setResId(resourceId);
+                    list.add(pr);
+                }
+                permissionResourceMapper.insertBatch(list);
+            }
+        }
     }
 
     @Override
@@ -100,6 +133,8 @@ public class PermissionServiceImpl implements IPermissionService {
 
         // 删除角色权限关联
         rolePermissionMapper.deleteByPermissionId(id);
+        // 删除权限资源关联
+        permissionResourceMapper.deleteByPermissionId(id);
         // 逻辑删除权限
         permissionMapper.deleteById(id);
     }
@@ -109,13 +144,36 @@ public class PermissionServiceImpl implements IPermissionService {
     public void deleteBatch(List<String> ids) {
         for (String id : ids) {
             rolePermissionMapper.deleteByPermissionId(id);
+            permissionResourceMapper.deleteByPermissionId(id);
         }
-        permissionMapper.deleteBatchIds(ids);
+        permissionMapper.deleteByIds(ids);
     }
 
     @Override
     public List<String> getPermCodesByUserId(String userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
+    }
+
+    @Override
+    public void assignResourcesToPermission(String permissionId, List<String> resourceIds) {
+        // 先删除旧的关联
+        permissionResourceMapper.deleteByPermissionId(permissionId);
+        // 插入新的关联
+        if (!resourceIds.isEmpty()) {
+            List<PermissionResource> list = new ArrayList<>();
+            for (String resourceId : resourceIds) {
+                PermissionResource pr = new PermissionResource();
+                pr.setPermId(permissionId);
+                pr.setResId(resourceId);
+                list.add(pr);
+            }
+            permissionResourceMapper.insertBatch(list);
+        }
+    }
+
+    @Override
+    public List<String> getResourcesByPermissionId(String permissionId) {
+        return permissionResourceMapper.selectResourceIdsByPermissionId(permissionId);
     }
 
     private LambdaQueryWrapper<Permission> buildQueryWrapper(PermissionQueryDTO query) {
