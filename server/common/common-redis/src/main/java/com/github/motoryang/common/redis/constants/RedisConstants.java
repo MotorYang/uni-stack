@@ -15,4 +15,9 @@ public class RedisConstants {
      * 用户权限缓存 key 前缀，完整 key 为 uni:perms:{userId}
      */
     public static final String REDIS_USER_PERMS_KEY = "uni:perms:";
+
+    /**
+     * API 注册表缓存 key 前缀，完整 key 为 uni:api:{serviceName}
+     */
+    public static final String REDIS_API_KEY = "uni:api:";
 }

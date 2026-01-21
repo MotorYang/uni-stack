@@ -39,6 +39,7 @@
         <bcprov.version>1.78.1</bcprov.version>
         <knife4j.version>4.3.0</knife4j.version>
         <spring-boot-admin.version>3.3.4</spring-boot-admin.version>
+        <swagger-annotations.version>2.2.22</swagger-annotations.version>
     </properties>
 
     <dependencyManagement>
@@ -148,6 +149,12 @@
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations.version}</version>
             </dependency>
 
             <!-- knife4j 内部微服务使用 -->

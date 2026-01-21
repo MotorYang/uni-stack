@@ -161,3 +161,60 @@ CREATE TABLE sys_role_permission (
                                      PRIMARY KEY (role_id, permission_id),
                                      KEY idx_sys_role_permission_permission_id (permission_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='角色权限关联表';
+
+-- ============================================
+-- 9. 创建权限和资源相关表单
+-- ============================================
+-- 资源组表
+DROP TABLE IF EXISTS sys_resource_group;
+CREATE TABLE sys_resource_group (
+                                    id CHAR(36) NOT NULL COMMENT '资源组ID',
+                                    res_group_name VARCHAR(50) NOT NULL COMMENT '资源组名称',
+                                    res_group_code VARCHAR(50) NOT NULL COMMENT '资源组编码',
+                                    description VARCHAR(200) DEFAULT NULL COMMENT '资源组描述',
+                                    service_name VARCHAR(50) DEFAULT NULL COMMENT '所属微服务标识', -- 对应 spring.application.name
+                                    sort INT DEFAULT 0 COMMENT '显示顺序',
+                                    status TINYINT DEFAULT 0 COMMENT '状态（0正常 1停用）',
+                                    create_time DATETIME(6) DEFAULT NULL,
+                                    update_time DATETIME(6) DEFAULT NULL,
+                                    create_by CHAR(36) DEFAULT NULL,
+                                    update_by CHAR(36) DEFAULT NULL,
+                                    deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
+                                    PRIMARY KEY (id),
+                                    UNIQUE KEY uk_res_group_code (res_group_code),
+                                    KEY idx_service_name (service_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='资源组表';
+
+-- 资源表
+DROP TABLE IF EXISTS sys_resource;
+CREATE TABLE sys_resource (
+                              id CHAR(36) NOT NULL COMMENT '资源ID',
+                              group_id CHAR(36) NOT NULL COMMENT '资源组ID',
+                              res_name VARCHAR(50) NOT NULL COMMENT '资源名称',
+                              res_type VARCHAR(10) NOT NULL COMMENT '资源类型（API、BUTTON）',
+                              res_path VARCHAR(255) NOT NULL COMMENT '资源路径（API路径或组件ID）',
+                              res_code VARCHAR(100) NOT NULL COMMENT '资源编码',
+                              res_method VARCHAR(20) DEFAULT '*' COMMENT '请求方式（GET/POST/*）', -- 默认 * 代表不限
+                              description VARCHAR(200) DEFAULT NULL,
+                              sort INT DEFAULT 0,
+                              status TINYINT DEFAULT 0,
+                              create_time DATETIME(6) DEFAULT NULL,
+                              update_time DATETIME(6) DEFAULT NULL,
+                              create_by CHAR(36) DEFAULT NULL,
+                              update_by CHAR(36) DEFAULT NULL,
+                              deleted TINYINT DEFAULT 0,
+                              PRIMARY KEY (id),
+                              UNIQUE KEY uk_res_code (res_code),
+                              UNIQUE KEY uk_path_method (res_path, res_method, deleted),
+                              KEY idx_group_id (group_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='资源表';
+
+-- 权限资源关联表
+DROP TABLE IF EXISTS sys_permission_resource;
+CREATE TABLE sys_permission_resource (
+                                         id CHAR(36) NOT NULL, -- 增加独立ID
+                                         perm_id CHAR(36) NOT NULL COMMENT '权限标识表ID',
+                                         res_id CHAR(36) NOT NULL COMMENT '资源表ID',
+                                         PRIMARY KEY (id),
+                                         UNIQUE KEY uk_perm_res (perm_id, res_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='权限资源关联表';
