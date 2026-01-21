@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 认证服务实现
@@ -40,11 +42,11 @@ public class AuthServiceImpl implements IAuthService {
     @Value("${auth.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${auth.jwt.access-token-expire:7200000}")
-    private long accessTokenExpire;  // 默认 2 小时
+    @Value("${auth.jwt.access-token-expire}")
+    private Duration accessTokenExpire;
 
-    @Value("${auth.jwt.refresh-token-expire:604800000}")
-    private long refreshTokenExpire;  // 默认 7 天
+    @Value("${auth.jwt.refresh-token-expire}")
+    private Duration refreshTokenExpire;
 
     @Override
     public TokenVO login(LoginDTO dto) {
@@ -88,16 +90,25 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(ResultCode.TOKEN_INVALID);
         }
 
+        // 3. 比对和Redis中的Token是否一致
+        boolean isMatch = Objects.equals(
+                redisTemplate.opsForValue()
+                        .get(RedisConstants.REDIS_REFRESH_TOKEN_KEY + JwtUtils.getUserId(refreshToken, jwtSecret)),
+                dto.refreshToken());
+        if (!isMatch) {
+            throw new BusinessException(ResultCode.TOKEN_INVALID);
+        }
+
         String username = JwtUtils.getUsername(refreshToken, jwtSecret);
 
-        // 3. 重新获取用户信息（包含最新的角色和权限）
+        // 4. 重新获取用户信息（包含最新的角色和权限）
         RestResult<UserAuthInfo> result = systemUserClient.getUserByUsername(username);
         if (!result.isSuccess() || result.data() == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
         UserAuthInfo user = result.data();
 
-        // 4. 生成新的Token并存入redis
+        // 5. 生成新的Token并存入redis
         TokenVO tokenVO = generateTokens(user.id(), user.username(), user.roles());
         saveTokenToRedis(user.id(), tokenVO, user.permissions());
 
@@ -122,10 +133,10 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     private TokenVO generateTokens(String userId, String username, List<String> roles) {
-        String accessToken = JwtUtils.createAccessToken(userId, username, roles, jwtSecret, accessTokenExpire);
-        String refreshToken = JwtUtils.createRefreshToken(userId, username, jwtSecret, refreshTokenExpire);
+        String accessToken = JwtUtils.createAccessToken(userId, username, roles, jwtSecret, accessTokenExpire.toMillis());
+        String refreshToken = JwtUtils.createRefreshToken(userId, username, jwtSecret, refreshTokenExpire.toMillis());
 
-        return new TokenVO(accessToken, refreshToken, accessTokenExpire / 1000);
+        return new TokenVO(accessToken, refreshToken, accessTokenExpire.toSeconds());
     }
 
     private void saveTokenToRedis(String userId, TokenVO tokenVO, List<String> permissions) {
@@ -135,14 +146,14 @@ public class AuthServiceImpl implements IAuthService {
 
         redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             var stringConn = (StringRedisConnection) connection;
-            stringConn.setEx(tokenKey, (int) (accessTokenExpire / 1000), tokenVO.accessToken());
-            stringConn.setEx(refreshKey, (int) (refreshTokenExpire / 1000), tokenVO.refreshToken());
+            stringConn.setEx(tokenKey, (int) (accessTokenExpire.toSeconds()), tokenVO.accessToken());
+            stringConn.setEx(refreshKey, (int) (refreshTokenExpire.toSeconds()), tokenVO.refreshToken());
 
             // 存储权限列表到 Redis Set
             if (!CollectionUtils.isEmpty(permissions)) {
                 stringConn.del(permsKey);
                 stringConn.sAdd(permsKey, permissions.toArray(new String[0]));
-                stringConn.expire(permsKey, (int) (accessTokenExpire / 1000));
+                stringConn.expire(permsKey, (int) (accessTokenExpire.toSeconds()));
             }
             return null;
         });
