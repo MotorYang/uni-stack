@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(dir /s \"E:\\\\code\\\\java\\\\uni-stack\\\\server\")",
-      "Skill(spring-cloud-microservice-framework)"
+      "Skill(spring-cloud-microservice-framework)",
+      "Bash(npx vue-tsc:*)"
     ]
   }
 }

@@ -163,7 +163,7 @@
 <script setup lang="ts">
   import { ref, h, type Component, watch, onMounted } from 'vue'
 import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
-import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage } from 'naive-ui'
+import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage, NDivider } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
 import { getUserMenuTree, type MenuVO } from '@/api/menu'
@@ -244,12 +244,11 @@ function transformMenuToRoutes(menus: MenuVO[], existingPaths: Set<string>): Rou
       ) {
         routes.push({
           path: item.path,
-          name: item.perms || item.path,
+          name: item.path,
           component: resolveViewComponent(item.component),
           meta: {
             title: item.menuName,
             icon: item.icon,
-            perms: item.perms
           }
         })
       }
@@ -285,7 +284,7 @@ function findFirstMenuPath(menus: MenuVO[]): string | null {
 
 function transformMenu(menus: MenuVO[]): MenuOption[] {
   return menus
-    .filter(item => item.menuType !== 'B' && item.visible === 0 && item.status === 0)
+    .filter(item => item.visible === 0 && item.status === 0)
     .map(item => {
       const option: MenuOption = {
         label: item.menuName,
