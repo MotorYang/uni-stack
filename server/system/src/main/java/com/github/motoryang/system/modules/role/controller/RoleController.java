@@ -10,6 +10,8 @@ import com.github.motoryang.system.modules.role.model.vo.RoleDetailVO;
 import com.github.motoryang.system.modules.role.model.vo.RoleVO;
 import com.github.motoryang.system.modules.role.service.IRoleService;
 import com.github.motoryang.system.modules.user.model.vo.UserVO;
+import com.github.motoryang.system.modules.permission.model.vo.PermissionVO;
+import com.github.motoryang.system.modules.permission.service.IPermissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +33,7 @@ import java.util.List;
 public class RoleController {
 
     private final IRoleService roleService;
+    private final IPermissionService permissionService;
 
     /**
      * 分页查询角色
@@ -176,6 +179,51 @@ public class RoleController {
             @Parameter(description = "角色ID", required = true) @PathVariable String roleId,
             @RequestBody List<String> userIds) {
         roleService.removeUsersFromRole(roleId, userIds);
+        return RestResult.ok();
+    }
+
+    /**
+     * 获取角色关联的权限列表
+     *
+     * @param roleId 角色ID
+     * @return 权限列表
+     */
+    @Operation(summary = "获取角色权限列表", description = "获取指定角色关联的所有权限")
+    @GetMapping("/{roleId}/permissions")
+    public RestResult<List<PermissionVO>> getPermissions(
+            @Parameter(description = "角色ID", required = true) @PathVariable String roleId) {
+        return RestResult.ok(permissionService.getByRoleId(roleId));
+    }
+
+    /**
+     * 批量添加权限到角色
+     *
+     * @param roleId        角色ID
+     * @param permissionIds 权限ID列表
+     * @return 操作结果
+     */
+    @Operation(summary = "批量添加权限到角色", description = "将多个权限添加到指定角色")
+    @PostMapping("/{roleId}/permissions")
+    public RestResult<Void> addPermissions(
+            @Parameter(description = "角色ID", required = true) @PathVariable String roleId,
+            @RequestBody List<String> permissionIds) {
+        roleService.addPermissionsToRole(roleId, permissionIds);
+        return RestResult.ok();
+    }
+
+    /**
+     * 从角色移除单个权限
+     *
+     * @param roleId       角色ID
+     * @param permissionId 权限ID
+     * @return 操作结果
+     */
+    @Operation(summary = "从角色移除权限", description = "从指定角色移除单个权限")
+    @DeleteMapping("/{roleId}/permissions/{permissionId}")
+    public RestResult<Void> removePermission(
+            @Parameter(description = "角色ID", required = true) @PathVariable String roleId,
+            @Parameter(description = "权限ID", required = true) @PathVariable String permissionId) {
+        roleService.removePermissionFromRole(roleId, permissionId);
         return RestResult.ok();
     }
 }

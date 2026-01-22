@@ -228,6 +228,30 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         userIds.forEach(userId -> userRoleMapper.deleteByRoleIdAndUserId(roleId, userId));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addPermissionsToRole(String roleId, List<String> permissionIds) {
+        if (CollectionUtils.isEmpty(permissionIds)) {
+            return;
+        }
+        // 获取已有的权限ID列表，避免重复添加
+        List<String> existingIds = rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
+        List<String> newIds = permissionIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+        if (!newIds.isEmpty()) {
+            saveRolePermissions(roleId, newIds);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removePermissionFromRole(String roleId, String permissionId) {
+        rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>()
+                .eq(RolePermission::getRoleId, roleId)
+                .eq(RolePermission::getPermissionId, permissionId));
+    }
+
     private void saveRoleMenus(String roleId, List<String> menuIds) {
         List<RoleMenu> roleMenus = menuIds.stream()
                 .map(menuId -> {

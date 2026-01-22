@@ -78,7 +78,14 @@
         </div>
 
         <div v-if="currentRole" class="flex-1 flex flex-col overflow-hidden">
-          <n-tabs v-model:value="activeTab" type="line" animated>
+          <n-tabs
+            v-model:value="activeTab"
+            type="line"
+            animated
+            class="flex-1 flex flex-col overflow-hidden"
+            pane-wrapper-style="flex: 1; overflow: hidden; display: flex; flex-direction: column;"
+            pane-style="flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+          >
             <n-tab-pane name="basic" tab="基本信息">
               <div class="pt-2">
                 <n-descriptions
@@ -203,6 +210,73 @@
                 </div>
               </div>
             </n-tab-pane>
+            <n-tab-pane name="permissions" tab="权限列表">
+              <div class="flex flex-col h-full pt-2">
+                <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-semibold text-sm text-text-main">角色权限</h4>
+                    <n-tag size="tiny" round :bordered="false" type="info">{{ rolePermissionList.length }} 个</n-tag>
+                  </div>
+                  <n-button type="primary" size="tiny" quaternary @click="handleOpenPermissionSelector">
+                    <template #icon><n-icon><AddOutline /></n-icon></template>
+                    添加权限
+                  </n-button>
+                </div>
+                <div class="flex-1 overflow-y-auto">
+                  <n-spin :show="loadingRolePermissions">
+                    <div v-if="rolePermissionList.length === 0" class="flex items-center justify-center h-40 text-gray-400">
+                      暂无权限，点击「添加权限」按钮进行添加
+                    </div>
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-1">
+                    <div
+                      v-for="perm in rolePermissionList"
+                      :key="perm.id"
+                      class="group relative p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+                    >
+                      <n-popconfirm
+                        @positive-click="handleRemovePermission(perm.id)"
+                      >
+                        <template #trigger>
+                          <n-button
+                            class="!absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            size="tiny"
+                            quaternary
+                            circle
+                            type="error"
+                          >
+                            <template #icon><n-icon><CloseOutline /></n-icon></template>
+                          </n-button>
+                        </template>
+                        确定要移除该权限吗？
+                      </n-popconfirm>
+                      <div class="flex items-start justify-between mb-2 pr-6">
+                        <div class="flex items-center gap-2">
+                          <n-icon size="18" :color="perm.status === 0 ? '#18a058' : '#d03050'">
+                            <ShieldCheckmarkOutline />
+                          </n-icon>
+                          <span class="font-medium text-sm text-text-main">{{ perm.permName }}</span>
+                        </div>
+                        <n-tag size="tiny" :type="perm.status === 0 ? 'success' : 'error'">
+                          {{ perm.status === 0 ? '正常' : '禁用' }}
+                        </n-tag>
+                      </div>
+                      <div class="mb-2">
+                        <n-tag size="tiny" :bordered="false" type="info">
+                          {{ perm.permCode }}
+                        </n-tag>
+                      </div>
+                      <div v-if="perm.description" class="text-xs text-gray-500 line-clamp-2">
+                        {{ perm.description }}
+                      </div>
+                      <div v-if="perm.resourceIds && perm.resourceIds.length > 0" class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-xs text-gray-400">关联资源: {{ perm.resourceIds.length }} 个</span>
+                      </div>
+                    </div>
+                  </div>
+                  </n-spin>
+                </div>
+              </div>
+            </n-tab-pane>
           </n-tabs>
         </div>
 
@@ -263,6 +337,78 @@
             确定
           </n-button>
         </n-space>
+      </template>
+    </n-modal>
+
+    <!-- 权限选择器弹窗 -->
+    <n-modal
+      v-model:show="showPermissionSelector"
+      title="选择权限"
+      preset="card"
+      style="width: 700px"
+      :mask-closable="false"
+    >
+      <div class="space-y-4">
+        <n-input
+          v-model:value="permissionSearchKeyword"
+          placeholder="搜索权限名称或编码..."
+          clearable
+        >
+          <template #prefix>
+            <n-icon><SearchOutline /></n-icon>
+          </template>
+        </n-input>
+
+        <n-spin :show="loadingAllPermissions">
+          <div v-if="availablePermissions.length === 0" class="flex items-center justify-center h-40 text-gray-400">
+            {{ permissionSearchKeyword ? '没有匹配的权限' : '没有可添加的权限' }}
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-1">
+            <div
+              v-for="perm in availablePermissions"
+              :key="perm.id"
+              class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary cursor-pointer transition-colors"
+              :class="{ 'border-primary bg-primary/5': selectedPermissionIds.includes(perm.id) }"
+              @click="handlePermissionSelect(perm.id, !selectedPermissionIds.includes(perm.id))"
+            >
+              <n-checkbox
+                :checked="selectedPermissionIds.includes(perm.id)"
+                @update:checked="(checked: boolean) => handlePermissionSelect(perm.id, checked)"
+                @click.stop
+              />
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <n-icon size="16" :color="perm.status === 0 ? '#18a058' : '#d03050'">
+                    <ShieldCheckmarkOutline />
+                  </n-icon>
+                  <span class="font-medium text-sm truncate">{{ perm.permName }}</span>
+                </div>
+                <n-tag size="tiny" :bordered="false" type="info">
+                  {{ perm.permCode }}
+                </n-tag>
+                <div v-if="perm.description" class="mt-1 text-xs text-gray-500 line-clamp-1">
+                  {{ perm.description }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </n-spin>
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-500">已选择 {{ selectedPermissionIds.length }} 个权限</span>
+          <n-space>
+            <n-button @click="showPermissionSelector = false">取消</n-button>
+            <n-button
+              type="primary"
+              :loading="savingPermissions"
+              :disabled="selectedPermissionIds.length === 0"
+              @click="handleConfirmAddPermissions"
+            >
+              确定添加
+            </n-button>
+          </n-space>
+        </div>
       </template>
     </n-modal>
 
@@ -328,7 +474,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, h } from 'vue'
+import { ref, reactive, computed, onMounted, h, type Ref } from 'vue'
 import {
   NForm,
   NFormItem,
@@ -349,6 +495,8 @@ import {
   NDescriptionsItem,
   NAvatar,
   NSpin,
+  NCheckbox,
+  NPopconfirm,
   useMessage,
   type FormInst,
   type FormRules,
@@ -356,7 +504,7 @@ import {
   type DataTableColumns,
   type DataTableRowKey
 } from 'naive-ui'
-import { SearchOutline, RefreshOutline, AddOutline, PersonAddOutline } from '@vicons/ionicons5'
+import { SearchOutline, RefreshOutline, AddOutline, PersonAddOutline, ShieldCheckmarkOutline, TrashOutline, CloseOutline } from '@vicons/ionicons5'
 import {
   getRolePage,
   getRoleDetail,
@@ -365,13 +513,18 @@ import {
   getRoleUsers,
   addUsersToRole,
   removeUsersFromRole,
+  getRolePermissions,
+  addPermissionsToRole,
+  removePermissionFromRole,
+  getAllPermissions,
   type RoleVO,
   type RoleDetailVO,
   type RoleQueryDTO,
   type RoleCreateDTO,
   type RoleUpdateDTO,
   type RoleUserVO,
-  type RoleUserQueryDTO
+  type RoleUserQueryDTO,
+  type PermissionVO
 } from '@/api/role'
 import { getMenuTree, type MenuVO } from '@/api/menu'
 
@@ -435,8 +588,11 @@ const loadRoleDetail = async (id: string) => {
   try {
     const res = await getRoleDetail(id)
     currentRole.value = res
-    await loadRoleMenus(id)
-    await loadRoleUsers(id)
+    await Promise.all([
+      loadRoleMenus(id),
+      loadRoleUsers(id),
+      loadRolePermissions(id)
+    ])
   } catch (error) {
     message.error('加载角色详情失败')
   }
@@ -595,6 +751,95 @@ const handleSaveRoleMenus = async () => {
     message.error('保存菜单权限失败')
   } finally {
     savingRoleMenus.value = false
+  }
+}
+
+// 角色权限相关
+const rolePermissionList = ref<PermissionVO[]>([])
+const loadingRolePermissions = ref(false)
+
+const loadRolePermissions = async (roleId: string) => {
+  loadingRolePermissions.value = true
+  try {
+    rolePermissionList.value = await getRolePermissions(roleId)
+  } catch (error) {
+    message.error('加载角色权限失败')
+  } finally {
+    loadingRolePermissions.value = false
+  }
+}
+
+// 权限选择器相关
+const showPermissionSelector = ref(false)
+const allPermissionList = ref<PermissionVO[]>([])
+const loadingAllPermissions = ref(false)
+const selectedPermissionIds = ref<string[]>([])
+const savingPermissions = ref(false)
+const permissionSearchKeyword = ref('')
+
+const filteredPermissions = computed(() => {
+  const keyword = permissionSearchKeyword.value.toLowerCase()
+  if (!keyword) return allPermissionList.value
+  return allPermissionList.value.filter(
+    p => p.permName.toLowerCase().includes(keyword) || p.permCode.toLowerCase().includes(keyword)
+  )
+})
+
+const availablePermissions = computed(() => {
+  const existingIds = new Set(rolePermissionList.value.map(p => p.id))
+  return filteredPermissions.value.filter(p => !existingIds.has(p.id))
+})
+
+const loadAllPermissions = async () => {
+  loadingAllPermissions.value = true
+  try {
+    allPermissionList.value = await getAllPermissions()
+  } catch (error) {
+    message.error('加载权限列表失败')
+  } finally {
+    loadingAllPermissions.value = false
+  }
+}
+
+const handleOpenPermissionSelector = async () => {
+  if (!currentRole.value) return
+  showPermissionSelector.value = true
+  selectedPermissionIds.value = []
+  permissionSearchKeyword.value = ''
+  await loadAllPermissions()
+}
+
+const handlePermissionSelect = (permId: string, checked: boolean) => {
+  if (checked) {
+    selectedPermissionIds.value.push(permId)
+  } else {
+    selectedPermissionIds.value = selectedPermissionIds.value.filter(id => id !== permId)
+  }
+}
+
+const handleConfirmAddPermissions = async () => {
+  if (!currentRole.value || selectedPermissionIds.value.length === 0) return
+  savingPermissions.value = true
+  try {
+    await addPermissionsToRole(currentRole.value.id, selectedPermissionIds.value)
+    message.success('添加权限成功')
+    showPermissionSelector.value = false
+    await loadRolePermissions(currentRole.value.id)
+  } catch (error) {
+    message.error('添加权限失败')
+  } finally {
+    savingPermissions.value = false
+  }
+}
+
+const handleRemovePermission = async (permissionId: string) => {
+  if (!currentRole.value) return
+  try {
+    await removePermissionFromRole(currentRole.value.id, permissionId)
+    message.success('移除权限成功')
+    await loadRolePermissions(currentRole.value.id)
+  } catch (error) {
+    message.error('移除权限失败')
   }
 }
 

@@ -36,4 +36,16 @@ public interface PermissionMapper extends BaseMapper<Permission> {
               AND p.status = 0 AND p.deleted = 0
             """)
     List<String> selectPermCodesByRoleId(@Param("roleId") String roleId);
+
+    /**
+     * 根据角色ID查询权限实体列表
+     */
+    @Select("""
+            SELECT p.* FROM sys_permission p
+            INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
+            WHERE rp.role_id = #{roleId}
+              AND p.deleted = 0
+            ORDER BY p.sort ASC
+            """)
+    List<Permission> selectByRoleId(@Param("roleId") String roleId);
 }

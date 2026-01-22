@@ -62,4 +62,9 @@ public interface IPermissionService {
      * 根据权限ID查询关联的资源ID列表
      */
     List<String> getResourcesByPermissionId(String permissionId);
+
+    /**
+     * 根据角色ID查询权限列表
+     */
+    List<PermissionVO> getByRoleId(String roleId);
 }

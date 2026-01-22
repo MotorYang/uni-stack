@@ -54,4 +54,14 @@ public interface IRoleService extends IService<Role> {
     void removeUserFromRole(String roleId, String userId);
 
     void removeUsersFromRole(String roleId, List<String> userIds);
+
+    /**
+     * 批量添加权限到角色
+     */
+    void addPermissionsToRole(String roleId, List<String> permissionIds);
+
+    /**
+     * 从角色移除单个权限
+     */
+    void removePermissionFromRole(String roleId, String permissionId);
 }

@@ -176,6 +176,12 @@ public class PermissionServiceImpl implements IPermissionService {
         return permissionResourceMapper.selectResourceIdsByPermissionId(permissionId);
     }
 
+    @Override
+    public List<PermissionVO> getByRoleId(String roleId) {
+        List<Permission> permissions = permissionMapper.selectByRoleId(roleId);
+        return permissionConverter.toVOList(permissions);
+    }
+
     private LambdaQueryWrapper<Permission> buildQueryWrapper(PermissionQueryDTO query) {
         LambdaQueryWrapper<Permission> wrapper = new LambdaQueryWrapper<>();
         if (query != null) {

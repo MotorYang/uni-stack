@@ -117,3 +117,35 @@ export const removeUserFromRole = (roleId: string, userId: string): Promise<void
 export const removeUsersFromRole = (roleId: string, userIds: string[]): Promise<void> => {
   return request.delete<any, void>(`/system/roles/${roleId}/users`, { data: userIds })
 }
+
+// 权限相关类型
+export interface PermissionVO {
+  id: string
+  permName: string
+  permCode: string
+  description: string
+  sort: number
+  status: number
+  createTime: string
+  resourceIds: string[]
+}
+
+// 获取角色关联的权限列表
+export const getRolePermissions = (roleId: string): Promise<PermissionVO[]> => {
+  return request.get<any, PermissionVO[]>(`/system/roles/${roleId}/permissions`)
+}
+
+// 批量添加权限到角色
+export const addPermissionsToRole = (roleId: string, permissionIds: string[]): Promise<void> => {
+  return request.post<any, void>(`/system/roles/${roleId}/permissions`, permissionIds)
+}
+
+// 从角色移除权限
+export const removePermissionFromRole = (roleId: string, permissionId: string): Promise<void> => {
+  return request.delete<any, void>(`/system/roles/${roleId}/permissions/${permissionId}`)
+}
+
+// 获取所有权限列表（用于权限选择器）
+export const getAllPermissions = (): Promise<PermissionVO[]> => {
+  return request.get<any, PermissionVO[]>('/system/permissions/list')
+}
