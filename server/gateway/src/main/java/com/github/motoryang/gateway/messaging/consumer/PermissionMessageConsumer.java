@@ -2,6 +2,7 @@ package com.github.motoryang.gateway.messaging.consumer;
 
 import com.github.motoryang.gateway.handler.PermissionCacheLoader;
 import com.github.motoryang.gateway.messaging.event.PermissionSyncType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 /**
  * 权限消息消费者
  */
+@Slf4j
 @Configuration
 public class PermissionMessageConsumer {
 
@@ -42,6 +44,7 @@ public class PermissionMessageConsumer {
             if (System.currentTimeMillis() - lastRefreshTime.get() < 500) {
                 return;
             }
+            log.info("[message-consumer-permSync] 刷新权限缓存");
             lastRefreshTime.set(System.currentTimeMillis());
             // 虚拟线程从Redis加载权限
             Thread.startVirtualThread(() -> {

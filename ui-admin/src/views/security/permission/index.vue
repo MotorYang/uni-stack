@@ -4,35 +4,46 @@
       <!-- Left Panel: Search & Permission List -->
       <div class="glass-card !p-5 w-96 flex-shrink-0 flex flex-col">
         <div class="mb-4">
-          <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
-            <n-form-item label="权限名称" :show-feedback="false">
-              <n-input v-model:value="queryParams.permName" placeholder="请输入权限名称" clearable class="!w-36" />
-            </n-form-item>
-            <n-form-item label="权限编码" :show-feedback="false">
-              <n-input v-model:value="queryParams.permCode" placeholder="请输入权限编码" clearable class="!w-36" />
-            </n-form-item>
-            <n-form-item label="状态" :show-feedback="false">
-              <n-select
-                v-model:value="queryParams.status"
-                :options="statusOptions"
-                placeholder="请选择"
-                clearable
-                class="!w-28"
-              />
-            </n-form-item>
-            <n-form-item :show-feedback="false">
-              <n-space>
-                <n-button type="primary" size="small" @click="handleSearch">
-                  <template #icon><n-icon><SearchOutline /></n-icon></template>
-                  搜索
-                </n-button>
-                <n-button size="small" @click="handleReset">
-                  <template #icon><n-icon><RefreshOutline /></n-icon></template>
-                  重置
-                </n-button>
-              </n-space>
-            </n-form-item>
-          </n-form>
+          <div
+            class="flex items-center justify-between cursor-pointer select-none mb-2"
+            @click="showSearchForm = !showSearchForm"
+          >
+            <span class="text-sm text-gray-500">搜索条件</span>
+            <n-icon :class="['transition-transform', showSearchForm ? 'rotate-180' : '']">
+              <ChevronDownOutline />
+            </n-icon>
+          </div>
+          <n-collapse-transition :show="showSearchForm">
+            <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
+              <n-form-item label="权限名称" :show-feedback="false">
+                <n-input v-model:value="queryParams.permName" placeholder="请输入权限名称" clearable class="!w-36" />
+              </n-form-item>
+              <n-form-item label="权限编码" :show-feedback="false">
+                <n-input v-model:value="queryParams.permCode" placeholder="请输入权限编码" clearable class="!w-36" />
+              </n-form-item>
+              <n-form-item label="状态" :show-feedback="false">
+                <n-select
+                  v-model:value="queryParams.status"
+                  :options="statusOptions"
+                  placeholder="请选择"
+                  clearable
+                  class="!w-28"
+                />
+              </n-form-item>
+              <n-form-item :show-feedback="false">
+                <n-space>
+                  <n-button type="primary" size="small" @click="handleSearch">
+                    <template #icon><n-icon><SearchOutline /></n-icon></template>
+                    搜索
+                  </n-button>
+                  <n-button size="small" @click="handleReset">
+                    <template #icon><n-icon><RefreshOutline /></n-icon></template>
+                    重置
+                  </n-button>
+                </n-space>
+              </n-form-item>
+            </n-form>
+          </n-collapse-transition>
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
@@ -53,7 +64,7 @@
                   v-for="perm in permissionList"
                   :key="perm.id"
                   :class="[
-                    'p-3 rounded-lg cursor-pointer transition-all border',
+                    'p-3 rounded-lg cursor-pointer transition-all border group',
                     selectedPermission?.id === perm.id
                       ? 'bg-blue-500/10 border-blue-400/50'
                       : 'bg-white/5 border-transparent hover:bg-white/10'
@@ -69,8 +80,21 @@
                       {{ perm.status === 0 ? '正常' : '停用' }}
                     </n-tag>
                   </div>
-                  <div class="mt-1 text-xs text-gray-500">
-                    <n-text code>{{ perm.permCode }}</n-text>
+                  <div class="flex items-center justify-between mt-1">
+                    <n-text code class="text-xs text-gray-500">{{ perm.permCode }}</n-text>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                      <n-button text size="tiny" type="primary" @click="handleEdit(perm)">
+                        <template #icon><n-icon :size="14"><CreateOutline /></n-icon></template>
+                      </n-button>
+                      <n-popconfirm @positive-click="handleDelete(perm)">
+                        <template #trigger>
+                          <n-button text size="tiny" type="error">
+                            <template #icon><n-icon :size="14"><TrashOutline /></n-icon></template>
+                          </n-button>
+                        </template>
+                        确定删除权限 "{{ perm.permName }}" 吗？
+                      </n-popconfirm>
+                    </div>
                   </div>
                 </div>
                 <div v-if="permissionList.length === 0 && !loading" class="text-center py-8 text-gray-400">
@@ -99,7 +123,7 @@
       <div class="glass-card !p-6 flex-1 flex flex-col overflow-hidden">
         <template v-if="selectedPermission">
           <!-- Header -->
-          <div class="flex justify-between items-start mb-6">
+          <div class="flex justify-between items-start mb-4">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center">
                 <n-icon :size="24" class="text-green-500"><KeyOutline /></n-icon>
@@ -131,71 +155,103 @@
             </n-space>
           </div>
 
-          <!-- Detail Info -->
-          <div class="flex-1 overflow-y-auto">
-            <n-descriptions :column="1" label-placement="left" bordered size="small">
-              <n-descriptions-item label="权限ID">
-                <n-text code>{{ selectedPermission.id }}</n-text>
-              </n-descriptions-item>
-              <n-descriptions-item label="权限名称">
-                {{ selectedPermission.permName }}
-              </n-descriptions-item>
-              <n-descriptions-item label="权限编码">
-                <n-text code>{{ selectedPermission.permCode }}</n-text>
-              </n-descriptions-item>
-              <n-descriptions-item label="描述">
-                {{ selectedPermission.description || '-' }}
-              </n-descriptions-item>
-              <n-descriptions-item label="排序">
-                {{ selectedPermission.sort }}
-              </n-descriptions-item>
-              <n-descriptions-item label="状态">
-                <n-tag :type="selectedPermission.status === 0 ? 'success' : 'error'" size="small">
-                  {{ selectedPermission.status === 0 ? '正常' : '停用' }}
-                </n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="创建时间">
-                {{ selectedPermission.createTime?.replace('T', ' ').substring(0, 19) || '-' }}
-              </n-descriptions-item>
-            </n-descriptions>
-
-            <!-- Usage Tips -->
-            <div class="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <h4 class="font-semibold text-blue-400 mb-2">使用说明</h4>
-              <ul class="text-sm text-gray-400 space-y-1">
-                <li>权限编码格式建议：<n-text code>模块:操作</n-text>，如 <n-text code>user:read</n-text></li>
-                <li>在<n-text code> 角色管理 </n-text>中为角色分配权限，在<n-text code> 权限管理 </n-text>中为权限分配资源</li>
-              </ul>
-            </div>
-
-            <!-- Resource Allocation Card -->
-            <div class="mt-6 glass-card !p-4 border border-gray-200/10">
-              <div class="flex justify-between items-center mb-4">
-                <h4 class="font-semibold text-text-main">关联资源</h4>
-                <n-button size="small" type="primary" @click="handleAssignResources">
-                  <template #icon><n-icon><LinkOutline /></n-icon></template>
-                  分配资源
-                </n-button>
-              </div>
-              <div v-if="assignedResources.length > 0" class="space-y-2">
-                <div v-for="res in assignedResources" :key="res.id" class="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 transition-colors">
-                  <div class="flex items-center gap-2">
-                    <n-tag :type="res.resType === 'API' ? 'info' : 'warning'" size="small" class="mr-2">
-                      {{ res.resType }}
+          <!-- Tabs -->
+          <n-tabs
+            v-model:value="activeTab"
+            type="line"
+            animated
+            class="flex-1 flex flex-col overflow-hidden"
+            pane-wrapper-style="flex: 1; overflow: hidden; display: flex; flex-direction: column;"
+            pane-style="flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+          >
+            <n-tab-pane name="basic" tab="基本信息">
+              <div class="flex-1 overflow-y-auto pt-2">
+                <n-descriptions :column="2" label-placement="left" bordered size="small">
+                  <n-descriptions-item label="权限ID" :span="2">
+                    <n-text code>{{ selectedPermission.id }}</n-text>
+                  </n-descriptions-item>
+                  <n-descriptions-item label="权限名称" :span="2">
+                    {{ selectedPermission.permName }}
+                  </n-descriptions-item>
+                  <n-descriptions-item label="权限编码" :span="2">
+                    <n-text code>{{ selectedPermission.permCode }}</n-text>
+                  </n-descriptions-item>
+                  <n-descriptions-item label="描述" :span="2">
+                    {{ selectedPermission.description || '-' }}
+                  </n-descriptions-item>
+                  <n-descriptions-item label="排序">
+                    {{ selectedPermission.sort }}
+                  </n-descriptions-item>
+                  <n-descriptions-item label="状态">
+                    <n-tag :type="selectedPermission.status === 0 ? 'success' : 'error'" size="small">
+                      {{ selectedPermission.status === 0 ? '正常' : '停用' }}
                     </n-tag>
-                    <span class="text-sm text-text-main">{{ res.resName }}</span>
-                    <n-text code class="text-xs text-gray-500">{{ res.resPath }}</n-text>
-                  </div>
-                  <n-tag v-if="res.resType === 'API'" :type="getMethodType(res.resMethod)" size="tiny">
-                    {{ res.resMethod }}
-                  </n-tag>
+                  </n-descriptions-item>
+                  <n-descriptions-item label="创建时间" :span="2">
+                    {{ selectedPermission.createTime?.replace('T', ' ').substring(0, 19) || '-' }}
+                  </n-descriptions-item>
+                </n-descriptions>
+
+                <!-- Usage Tips -->
+                <div class="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <h4 class="font-semibold text-blue-400 mb-2">使用说明</h4>
+                  <ul class="text-sm text-gray-400 space-y-1">
+                    <li>在<n-text code> 角色管理 </n-text>中为角色分配权限</li>
+                    <li>在<n-text code> 关联资源 </n-text>页签中为权限分配资源</li>
+                  </ul>
                 </div>
               </div>
-              <div v-else class="text-center py-4 text-gray-400 text-sm">
-                暂无关联资源
+            </n-tab-pane>
+
+            <n-tab-pane name="resources" tab="关联资源">
+              <div class="flex-1 overflow-y-auto pt-2">
+                <div class="flex justify-between items-center mb-4">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500">已关联</span>
+                    <n-tag size="small" round :bordered="false" type="info">{{ assignedResources.length }} 个资源</n-tag>
+                  </div>
+                  <n-button size="small" type="primary" @click="handleAssignResources">
+                    <template #icon><n-icon><LinkOutline /></n-icon></template>
+                    分配资源
+                  </n-button>
+                </div>
+                <div v-if="assignedResources.length > 0" class="space-y-2">
+                  <div v-for="res in assignedResources" :key="res.id" class="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-gray-200/10 group">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                      <n-tag :type="res.resType === 'API' ? 'info' : 'warning'" size="small">
+                        {{ res.resType }}
+                      </n-tag>
+                      <span class="text-sm text-text-main font-medium">{{ res.resName }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <n-text code class="text-xs text-gray-500">{{ res.resPath }}</n-text>
+                      <n-tag v-if="res.resType === 'API'" :type="getMethodType(res.resMethod)" size="tiny">
+                        {{ res.resMethod }}
+                      </n-tag>
+                      <n-popconfirm @positive-click="handleRemoveResource(res.id)">
+                        <template #trigger>
+                          <n-button
+                            text
+                            size="tiny"
+                            type="error"
+                            class="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                          >
+                            <template #icon><n-icon :size="14"><CloseOutline /></n-icon></template>
+                          </n-button>
+                        </template>
+                        确定移除该资源吗？
+                      </n-popconfirm>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="flex flex-col items-center justify-center py-12 text-gray-400">
+                  <n-icon size="48" class="mb-3 opacity-30"><LinkOutline /></n-icon>
+                  <p>暂无关联资源</p>
+                  <p class="text-xs mt-1">点击「分配资源」按钮添加资源</p>
+                </div>
               </div>
-            </div>
-          </div>
+            </n-tab-pane>
+          </n-tabs>
         </template>
 
         <!-- Empty State -->
@@ -375,6 +431,9 @@ import {
   NPopconfirm,
   NCheckbox,
   NCheckboxGroup,
+  NCollapseTransition,
+  NTabs,
+  NTabPane,
   useMessage,
   type FormInst,
   type FormRules,
@@ -387,7 +446,9 @@ import {
   CreateOutline,
   TrashOutline,
   KeyOutline,
-  LinkOutline
+  LinkOutline,
+  ChevronDownOutline,
+  CloseOutline
 } from '@vicons/ionicons5'
 import {
   getPermissionPage,
@@ -418,6 +479,9 @@ const statusOptions = [
   { label: '停用', value: 1 }
 ]
 
+// Search form visibility (default collapsed)
+const showSearchForm = ref(false)
+
 // Query params
 const queryParams = reactive({
   permName: undefined as string | undefined,
@@ -432,6 +496,7 @@ const loading = ref(false)
 const total = ref(0)
 const permissionList = ref<PermissionVO[]>([])
 const selectedPermission = ref<PermissionVO | null>(null)
+const activeTab = ref('basic')
 
 // Modal state
 const showModal = ref(false)
@@ -456,8 +521,7 @@ const formRules: FormRules = {
   ],
   permCode: [
     { required: true, message: '请输入权限编码', trigger: 'blur' },
-    { min: 2, max: 100, message: '长度在 2-100 个字符', trigger: 'blur' },
-    { pattern: /^[a-z][a-z0-9]*:[a-z][a-z0-9]*$/, message: '格式为 模块:操作，如 user:read', trigger: 'blur' }
+    { min: 2, max: 100, message: '长度在 2-100 个字符', trigger: 'blur' }
   ]
 }
 
@@ -735,6 +799,21 @@ const handleSubmitResources = async () => {
     message.error('分配资源失败')
   } finally {
     submittingResources.value = false
+  }
+}
+
+// Remove a single resource from permission
+const handleRemoveResource = async (resourceId: string) => {
+  if (!selectedPermission.value) return
+  try {
+    const newResourceIds = assignedResources.value
+      .filter(r => r.id !== resourceId)
+      .map(r => r.id)
+    await assignResourcesToPermission(selectedPermission.value.id, newResourceIds)
+    message.success('移除成功')
+    await loadAssignedResources(selectedPermission.value.id)
+  } catch (error) {
+    message.error('移除失败')
   }
 }
 

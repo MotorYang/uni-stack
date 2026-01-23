@@ -49,6 +49,11 @@ public interface IRoleService extends IService<Role> {
      */
     IPage<UserVO> pageUserByRoleId(RoleUserQueryDTO dto);
 
+    /**
+     * 分页查询未分配该角色的用户（排除已禁用用户）
+     */
+    IPage<UserVO> pageUnassignedUsersByRoleId(RoleUserQueryDTO dto);
+
     void addUsersToRole(String roleId, List<String> userIds);
 
     void removeUserFromRole(String roleId, String userId);

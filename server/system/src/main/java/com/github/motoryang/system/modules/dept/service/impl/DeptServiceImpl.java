@@ -11,8 +11,7 @@ import com.github.motoryang.system.modules.dept.model.dto.DeptQueryDTO;
 import com.github.motoryang.system.modules.dept.model.dto.DeptUpdateDTO;
 import com.github.motoryang.system.modules.dept.model.vo.DeptVO;
 import com.github.motoryang.system.modules.dept.service.IDeptService;
-import com.github.motoryang.system.modules.user.entity.User;
-import com.github.motoryang.system.modules.user.mapper.UserMapper;
+import com.github.motoryang.system.modules.relation.mapper.UserDeptMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept> implements IDeptService {
 
     private final DeptConverter deptConverter;
-    private final UserMapper userMapper;
+    private final UserDeptMapper userDeptMapper;
 
     @Override
     public List<DeptVO> listTree(DeptQueryDTO dto) {
@@ -123,9 +122,8 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept> implements ID
         }
 
         // 检查是否有用户
-        long userCount = userMapper.selectCount(new LambdaQueryWrapper<User>()
-                .eq(User::getDeptId, id));
-        if (userCount > 0) {
+        List<String> userIds = userDeptMapper.selectUserIdsByDeptId(id);
+        if (!userIds.isEmpty()) {
             throw new BusinessException("部门下存在用户，不能删除");
         }
 

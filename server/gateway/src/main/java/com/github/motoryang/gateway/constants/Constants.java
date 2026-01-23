@@ -22,4 +22,5 @@ public class Constants {
     public static final String USER_PERMS_HEADER = "X-User-Perms";
     public static final String INTERNAL_TOKEN_HEADER = "X-Internal-Token";
 
+    public static final String SKIP_SECURITY = "skipSecurity";
 }

@@ -1,5 +1,6 @@
 package com.github.motoryang.gateway.handler;
 
+import com.github.motoryang.common.utils.BackoffUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -7,6 +8,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -34,14 +36,15 @@ public class PermissionCacheLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        loadFromRedis();
+        log.info("从 Redis 加载权限缓存...");
+        BackoffUtils.execute(this::loadFromRedis, 3, Duration.ofSeconds(1), 3);
     }
 
     /**
      * 从 Redis 加载权限缓存到本地内存
      */
     public void loadFromRedis() {
-        log.info("从 Redis 加载权限缓存...");
+
         try {
             Map<Object, Object> entries = redisTemplate.opsForHash().entries(CACHE_KEY);
 

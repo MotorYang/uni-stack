@@ -3,32 +3,43 @@
     <div class="flex gap-6 h-[calc(100vh-140px)]">
       <div class="glass-card !p-5 w-80 flex-shrink-0 flex flex-col">
         <div class="mb-4">
-          <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
-            <n-form-item label="名称" :show-feedback="false">
-              <n-input v-model:value="queryParams.deptName" placeholder="请输入名称" clearable class="!w-40" />
-            </n-form-item>
-            <n-form-item label="状态" :show-feedback="false">
-              <n-select
-                v-model:value="queryParams.status"
-                :options="statusOptions"
-                placeholder="请选择"
-                clearable
-                class="!w-28"
-              />
-            </n-form-item>
-            <n-form-item :show-feedback="false">
-              <n-space>
-                <n-button type="primary" size="small" @click="handleSearch">
-                  <template #icon><n-icon><SearchOutline /></n-icon></template>
-                  搜索
-                </n-button>
-                <n-button size="small" @click="handleReset">
-                  <template #icon><n-icon><RefreshOutline /></n-icon></template>
-                  重置
-                </n-button>
-              </n-space>
-            </n-form-item>
-          </n-form>
+          <div
+              class="flex items-center justify-between cursor-pointer select-none mb-2"
+              @click="showSearchForm = !showSearchForm"
+          >
+            <span class="text-sm text-gray-500">搜索条件</span>
+            <n-icon :class="['transition-transform', showSearchForm ? 'rotate-180' : '']">
+              <ChevronDownOutline />
+            </n-icon>
+          </div>
+          <n-collapse-transition :show="showSearchForm">
+            <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
+              <n-form-item label="名称" :show-feedback="false">
+                <n-input v-model:value="queryParams.deptName" placeholder="请输入名称" clearable class="!w-40" />
+              </n-form-item>
+              <n-form-item label="状态" :show-feedback="false">
+                <n-select
+                    v-model:value="queryParams.status"
+                    :options="statusOptions"
+                    placeholder="请选择"
+                    clearable
+                    class="!w-28"
+                />
+              </n-form-item>
+              <n-form-item :show-feedback="false">
+                <n-space>
+                  <n-button type="primary" size="small" @click="handleSearch">
+                    <template #icon><n-icon><SearchOutline /></n-icon></template>
+                    搜索
+                  </n-button>
+                  <n-button size="small" @click="handleReset">
+                    <template #icon><n-icon><RefreshOutline /></n-icon></template>
+                    重置
+                  </n-button>
+                </n-space>
+              </n-form-item>
+            </n-form>
+          </n-collapse-transition>
         </div>
 
         <div class="flex-1 flex flex-col">
@@ -152,14 +163,6 @@
                       <n-input
                         v-model:value="userQueryParams.nickname"
                         placeholder="昵称"
-                        clearable
-                        class="!w-32"
-                      />
-                    </n-form-item>
-                    <n-form-item :show-feedback="false">
-                      <n-input
-                        v-model:value="userQueryParams.phone"
-                        placeholder="手机号"
                         clearable
                         class="!w-32"
                       />
@@ -329,6 +332,32 @@
         </n-space>
       </template>
     </n-modal>
+
+    <n-modal
+      v-model:show="showUserPicker"
+      title="选择用户"
+      preset="card"
+      style="width: 800px"
+      :mask-closable="false"
+    >
+      <UserPicker
+        v-model:value="selectedUserIds"
+        :existing-user-ids="existingUserIds"
+      />
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showUserPicker = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="savingUsers"
+            :disabled="selectedUserIds.length === 0"
+            @click="handleConfirmAddUsers"
+          >
+            确定 ({{ selectedUserIds.length }})
+          </n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -365,11 +394,13 @@ import {
   type FormRules,
   type TreeOption,
   type TreeSelectOption,
-  type DataTableColumns
+  type DataTableColumns, NCollapseTransition
 } from 'naive-ui'
-import { SearchOutline, RefreshOutline } from '@vicons/ionicons5'
-import { getDeptTree, createDept, updateDept, deleteDept, type DeptVO, type DeptCreateDTO, type DeptUpdateDTO } from '@/api/dept'
+import {SearchOutline, RefreshOutline, ChevronDownOutline} from '@vicons/ionicons5'
+import { getDeptTree, createDept, updateDept, deleteDept, getDeptUsers, assignUsersToDept, removeUsersFromDept, type DeptVO, type DeptCreateDTO, type DeptUpdateDTO, type DeptUserQueryDTO } from '@/api/dept'
 import { getUserPage, type UserVO, type UserQueryDTO, type PageResult } from '@/api/user'
+import { setPosition, type SetPositionDTO } from '@/api/dept'
+import UserPicker from '@/components/UserPicker.vue'
 
 const message = useMessage()
 
@@ -381,6 +412,8 @@ const statusOptions = [
   { label: '正常', value: 0 },
   { label: '停用', value: 1 }
 ]
+
+const showSearchForm = ref(false)
 
 const queryParams = reactive({
   deptName: '',
@@ -463,7 +496,7 @@ const handleDeptTreeSelect = (keys: string[]) => {
     currentDept.value = dept
     activeTab.value = 'basic'
     if (dept) {
-      userQueryParams.deptId = dept.id
+      currentDeptId.value = dept.id
       handleSearchUsers()
     }
   } else {
@@ -741,13 +774,12 @@ const handleConfirmLeader = async () => {
 const userList = ref<UserVO[]>([])
 const loadingUsers = ref(false)
 const userTotal = ref(0)
+const currentDeptId = ref('')
 
-const userQueryParams = reactive<UserQueryDTO>({
+const userQueryParams = reactive<DeptUserQueryDTO>({
   username: undefined,
   nickname: undefined,
-  phone: undefined,
   status: undefined,
-  deptId: '',
   current: 1,
   size: 10
 })
@@ -765,18 +797,18 @@ const userColumns: DataTableColumns<UserVO> = [
   {
     title: '用户名',
     key: 'username',
-    width: 120
+    width: 100
   },
   {
     title: '昵称',
     key: 'nickname',
-    width: 120,
+    width: 100,
     render: row => row.nickname || '-'
   },
   {
     title: '头像',
     key: 'avatar',
-    width: 70,
+    width: 60,
     render: row =>
       h(NAvatar, {
         size: 'small',
@@ -786,11 +818,25 @@ const userColumns: DataTableColumns<UserVO> = [
       })
   },
   {
-    title: '邮箱',
-    key: 'email',
-    width: 180,
-    ellipsis: { tooltip: true },
-    render: row => row.email || '-'
+    title: '职务',
+    key: 'position',
+    width: 100,
+    render(row, index) {
+      return h(NInput, {
+        value: row.position,
+        onUpdateValue(v) {
+          const user = userList.value[index]
+          if (user) {
+            user.position = v
+            setPosition({
+              userId: user.id,
+              position: user.position,
+              deptId: currentDeptId.value
+            })
+          }
+        },
+      })
+    }
   },
   {
     title: '手机号',
@@ -801,7 +847,7 @@ const userColumns: DataTableColumns<UserVO> = [
   {
     title: '状态',
     key: 'status',
-    width: 80,
+    width: 70,
     render: row =>
       h(
         NTag,
@@ -813,22 +859,43 @@ const userColumns: DataTableColumns<UserVO> = [
       )
   },
   {
-    title: '创建时间',
-    key: 'createTime',
-    width: 180,
-    render: row => row.createTime?.replace('T', ' ').substring(0, 19) || '-'
-  }
+    title: '操作',
+    key: 'actions',
+    width: 120,
+    render: (row) =>
+        h(NSpace, { size: 'small' }, () => [
+          h(
+              NPopconfirm,
+              {
+                onPositiveClick: () => handleRemoveUser(row.id),
+              },
+              {
+                trigger: () =>
+                    h(
+                        NButton,
+                        {
+                          size: 'tiny',
+                          type: 'error',
+                          quaternary: true,
+                        },
+                        { default: () => '移除' }
+                    ),
+                default: () => '确定要从该部门移除此用户吗？',
+              }
+          ),
+        ]),
+  },
 ]
 
 const loadUsersByDept = async () => {
-  if (!userQueryParams.deptId) {
+  if (!currentDeptId.value) {
     userList.value = []
     userTotal.value = 0
     return
   }
   loadingUsers.value = true
   try {
-    const res: PageResult<UserVO> = await getUserPage(userQueryParams)
+    const res: PageResult<UserVO> = await getDeptUsers(currentDeptId.value, userQueryParams)
     userList.value = res.records
     userTotal.value = res.total
   } catch (error) {
@@ -854,12 +921,49 @@ const handleUserPageSizeChange = (size: number) => {
   loadUsersByDept()
 }
 
+const showUserPicker = ref(false)
+const selectedUserIds = ref<string[]>([])
+const savingUsers = ref(false)
+
+const existingUserIds = computed(() => userList.value.map(u => u.id))
+
 const handleAddUser = () => {
   if (!currentDept.value) {
     message.warning('请先选择部门')
     return
   }
-  message.info('请在用户管理中添加并关联部门')
+  selectedUserIds.value = []
+  showUserPicker.value = true
+}
+
+const handleConfirmAddUsers = async () => {
+  if (!currentDept.value || selectedUserIds.value.length === 0) return
+  savingUsers.value = true
+  try {
+    await assignUsersToDept({
+      userIds: selectedUserIds.value,
+      deptId: currentDept.value.id
+    })
+    message.success('添加用户成功')
+    showUserPicker.value = false
+    selectedUserIds.value = []
+    handleSearchUsers()
+  } catch (error) {
+    message.error('添加用户失败')
+  } finally {
+    savingUsers.value = false
+  }
+}
+
+const handleRemoveUser = async (userId: string) => {
+  if (!currentDept.value) return
+  try {
+    await removeUsersFromDept(currentDept.value.id, { userIds: [userId] })
+    message.success('移除成功')
+    handleSearchUsers()
+  } catch (error) {
+    message.error('移除失败')
+  }
 }
 
 onMounted(() => {

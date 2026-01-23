@@ -218,3 +218,28 @@ CREATE TABLE sys_permission_resource (
                                          PRIMARY KEY (id),
                                          UNIQUE KEY uk_perm_res (perm_id, res_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='权限资源关联表';
+
+-- ============================================
+-- 10. 创建用户和部门的关联表
+-- ============================================
+-- 用户部门关联表
+DROP TABLE IF EXISTS sys_user_dept;
+CREATE TABLE sys_user_dept
+(
+    id          CHAR(36) NOT NULL PRIMARY KEY COMMENT 'id',
+    tenant_id   CHAR(36) NOT NULL COMMENT '租户id',
+    user_id     CHAR(36) NOT NULL COMMENT '用户id',
+    dept_id     CHAR(36) NOT NULL COMMENT '部门id',
+    is_primary  int      NOT NULL DEFAULT 1 COMMENT '是否主职部门（0否 1是）',
+    position    varchar(100) COMMENT '职务/岗位',
+    create_time DATETIME(6)       DEFAULT NULL,
+    update_time DATETIME(6)       DEFAULT NULL,
+    create_by   CHAR(36)          DEFAULT NULL,
+    update_by   CHAR(36)          DEFAULT NULL,
+    deleted     TINYINT           DEFAULT 0,
+    UNIQUE KEY uk_tenant_user_dept (tenant_id, user_id, dept_id),
+    KEY idx_tenant_user (tenant_id, user_id),
+    KEY idx_tenant_dept (tenant_id, dept_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci COMMENT ='用户部门关联表';

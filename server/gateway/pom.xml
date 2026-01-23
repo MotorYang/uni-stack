@@ -63,10 +63,14 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Common-Redis -->
+        <!-- Common -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-utils</artifactId>
         </dependency>
 
         <!-- Lombok -->

@@ -1,5 +1,12 @@
 import request from './request'
 
+export interface UserDeptVO {
+  deptId: string
+  deptName: string
+  isPrimary: number
+  position: string
+}
+
 export interface UserVO {
   id: string
   username: string
@@ -11,6 +18,7 @@ export interface UserVO {
   status: number
   deptId: string
   deptName: string
+  position: string
   createTime: string
 }
 
@@ -25,6 +33,8 @@ export interface UserDetailVO {
   status: number
   deptId: string
   deptName: string
+  position: string
+  depts: UserDeptVO[]
   roleIds: string[]
   roles: string[]
   permissions: string[]
@@ -50,7 +60,6 @@ export interface UserCreateDTO {
   phone?: string
   gender?: number
   avatar?: string
-  deptId?: string
   roleIds?: string[]
 }
 
@@ -62,7 +71,6 @@ export interface UserUpdateDTO {
   avatar?: string
   gender?: number
   status?: number
-  deptId?: string
   roleIds?: string[]
 }
 

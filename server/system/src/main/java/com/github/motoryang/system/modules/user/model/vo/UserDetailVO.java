@@ -17,6 +17,8 @@ public record UserDetailVO(
         Integer status,
         String deptId,
         String deptName,
+        String position,
+        List<UserDeptVO> depts,
         List<String> roleIds,
         List<String> roles,
         List<String> permissions,

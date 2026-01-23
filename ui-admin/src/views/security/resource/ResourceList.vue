@@ -141,10 +141,13 @@
         </n-form-item>
         <n-form-item label="资源路径" path="resPath">
           <n-input-group>
+            <n-input-group-label v-if="showServicePrefix">
+              {{ servicePrefix }}
+            </n-input-group-label>
             <n-input
                 v-model:value="formData.resPath"
                 placeholder="请输入资源路径"
-                :style="{ width: formData.resType === 'API' ? 'calc(100% - 100px)' : '100%' }"
+                :style="{ width: formData.resType === 'API' && group.serviceName ? 'calc(100% - 100px)' : '100%' }"
             />
             <n-button
                 v-if="formData.resType === 'API' && group.serviceName"
@@ -247,6 +250,7 @@ import {
   NInput,
   NInputNumber,
   NInputGroup,
+  NInputGroupLabel,
   NButton,
   NSpace,
   NSelect,
@@ -309,7 +313,6 @@ const typeOptions: SelectOption[] = [
 ]
 
 const methodOptions: SelectOption[] = [
-  {label: '全部 (*)', value: '*'},
   {label: 'GET', value: 'GET'},
   {label: 'POST', value: 'POST'},
   {label: 'PUT', value: 'PUT'},
@@ -450,6 +453,19 @@ const formRules: FormRules = {
   ]
 }
 
+// 服务前缀（新增 API 资源时使用）
+const servicePrefix = computed(() => {
+  if (props.group.serviceName) {
+    return `/${props.group.serviceName}`
+  }
+  return ''
+})
+
+// 是否显示服务前缀（新增 API 资源时显示）
+const showServicePrefix = computed(() => {
+  return !isEdit.value && formData.resType === 'API' && !!props.group.serviceName
+})
+
 // API Selector state
 const showApiSelector = ref(false)
 const loadingApis = ref(false)
@@ -539,7 +555,12 @@ const handleApiSelect = (keys: DataTableRowKey[]) => {
 
 const confirmApiSelection = () => {
   if (selectedApi.value) {
-    formData.resPath = selectedApi.value.path
+    let path = selectedApi.value.path
+    // 如果是新增且有服务前缀，去掉路径中的前缀（因为表单会自动添加）
+    if (!isEdit.value && servicePrefix.value && path.startsWith(servicePrefix.value)) {
+      path = path.substring(servicePrefix.value.length)
+    }
+    formData.resPath = path
     formData.resMethod = selectedApi.value.method === '*' ? '*' : selectedApi.value.method.split(',')[0]
     if (!formData.resName && selectedApi.value.summary) {
       formData.resName = selectedApi.value.summary
@@ -660,11 +681,16 @@ const handleSubmit = async () => {
       await updateResource(editingId.value, data)
       message.success('更新成功')
     } else {
+      // 新增 API 资源时自动添加服务前缀
+      let resPath = formData.resPath
+      if (formData.resType === 'API' && servicePrefix.value && !resPath.startsWith(servicePrefix.value)) {
+        resPath = servicePrefix.value + resPath
+      }
       const data: ResourceCreateDTO = {
         groupId: props.group.id,
         resName: formData.resName,
         resType: formData.resType as 'API' | 'BUTTON',
-        resPath: formData.resPath,
+        resPath: resPath,
         resCode: formData.resCode,
         resMethod: formData.resMethod,
         description: formData.description || undefined,

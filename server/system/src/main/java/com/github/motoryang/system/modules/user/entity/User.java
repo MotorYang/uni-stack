@@ -54,11 +54,21 @@ public class User extends BaseEntity {
      */
     private Integer status;
 
+    /**
+     * 主职部门ID（非数据库字段，通过关联表查询）
+     */
+    @TableField(exist = false)
     private String deptId;
 
     /**
-     * 部门名称（非数据库字段）
+     * 主职部门名称（非数据库字段）
      */
     @TableField(exist = false)
     private String deptName;
+
+    /**
+     * 主职部门职务（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String position;
 }

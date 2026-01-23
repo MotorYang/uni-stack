@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.common.core.result.ResultCode;
+import com.github.motoryang.system.handler.PermissionCacheLoader;
+import com.github.motoryang.system.modules.relation.mapper.PermissionResourceMapper;
 import com.github.motoryang.system.modules.resource.converter.ResourceConverter;
 import com.github.motoryang.system.modules.resource.entity.Resource;
 import com.github.motoryang.system.modules.resource.mapper.ResourceGroupMapper;
@@ -31,6 +33,8 @@ public class ResourceServiceImpl implements IResourceService {
     private final ResourceMapper resourceMapper;
     private final ResourceGroupMapper resourceGroupMapper;
     private final ResourceConverter resourceConverter;
+    private final PermissionResourceMapper permissionResourceMapper;
+    private final PermissionCacheLoader cacheLoader;
 
     @Override
     public IPage<ResourceVO> page(ResourceQueryDTO query) {
@@ -96,12 +100,18 @@ public class ResourceServiceImpl implements IResourceService {
             throw new BusinessException(ResultCode.NOT_FOUND);
         }
         resourceMapper.deleteById(id);
+        // 删除权限资源关联
+        permissionResourceMapper.deleteByResourceId(id);
+        cacheLoader.refreshCacheAfterCommit();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteBatch(List<String> ids) {
-        resourceMapper.deleteBatchIds(ids);
+        resourceMapper.deleteByIds(ids);
+        // 删除权限资源关联
+        ids.forEach(permissionResourceMapper::deleteByResourceId);
+        cacheLoader.refreshCacheAfterCommit();
     }
 
     @Override

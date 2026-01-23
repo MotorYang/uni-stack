@@ -135,6 +135,28 @@ public class RoleController {
     }
 
     /**
+     * 获取未分配该角色的用户（用于添加用户选择）
+     *
+     * @param roleId 角色ID
+     * @param dto    查询条件
+     * @return 用户分页列表
+     */
+    @Operation(summary = "获取未分配角色的用户", description = "分页查询未分配该角色的用户，排除已禁用用户")
+    @GetMapping("/{roleId}/users/unassigned")
+    public RestResult<IPage<UserVO>> getUnassignedUsers(
+            @Parameter(description = "角色ID", required = true) @PathVariable String roleId,
+            RoleUserQueryDTO dto) {
+        RoleUserQueryDTO queryDTO = new RoleUserQueryDTO(
+                roleId,
+                dto.username(),
+                dto.nickname(),
+                dto.current(),
+                dto.size()
+        );
+        return RestResult.ok(roleService.pageUnassignedUsersByRoleId(queryDTO));
+    }
+
+    /**
      * 批量添加用户到角色
      *
      * @param roleId  角色ID

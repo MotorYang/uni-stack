@@ -3,35 +3,46 @@
     <div class="flex gap-6 h-[calc(100vh-140px)]">
       <div class="glass-card !p-5 w-80 flex-shrink-0 flex flex-col">
         <div class="mb-4">
-          <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
-            <n-form-item label="角色名称" :show-feedback="false">
-              <n-input v-model:value="queryParams.roleName" placeholder="请输入角色名称" clearable class="!w-40" />
-            </n-form-item>
-            <n-form-item label="权限标识" :show-feedback="false">
-              <n-input v-model:value="queryParams.roleKey" placeholder="请输入权限标识" clearable class="!w-40" />
-            </n-form-item>
-            <n-form-item label="状态" :show-feedback="false">
-              <n-select
-                v-model:value="queryParams.status"
-                :options="statusOptions"
-                placeholder="请选择"
-                clearable
-                class="!w-28"
-              />
-            </n-form-item>
-            <n-form-item :show-feedback="false">
-              <n-space>
-                <n-button type="primary" size="small" @click="handleSearch">
-                  <template #icon><n-icon><SearchOutline /></n-icon></template>
-                  搜索
-                </n-button>
-                <n-button size="small" @click="handleReset">
-                  <template #icon><n-icon><RefreshOutline /></n-icon></template>
-                  重置
-                </n-button>
-              </n-space>
-            </n-form-item>
-          </n-form>
+          <div
+              class="flex items-center justify-between cursor-pointer select-none mb-2"
+              @click="showSearchForm = !showSearchForm"
+          >
+            <span class="text-sm text-gray-500">搜索条件</span>
+            <n-icon :class="['transition-transform', showSearchForm ? 'rotate-180' : '']">
+              <ChevronDownOutline />
+            </n-icon>
+          </div>
+          <n-collapse-transition :show="showSearchForm">
+            <n-form inline :model="queryParams" label-placement="left" class="flex flex-wrap gap-4">
+              <n-form-item label="角色名称" :show-feedback="false">
+                <n-input v-model:value="queryParams.roleName" placeholder="请输入角色名称" clearable class="!w-40" />
+              </n-form-item>
+              <n-form-item label="权限标识" :show-feedback="false">
+                <n-input v-model:value="queryParams.roleKey" placeholder="请输入权限标识" clearable class="!w-40" />
+              </n-form-item>
+              <n-form-item label="状态" :show-feedback="false">
+                <n-select
+                    v-model:value="queryParams.status"
+                    :options="statusOptions"
+                    placeholder="请选择"
+                    clearable
+                    class="!w-28"
+                />
+              </n-form-item>
+              <n-form-item :show-feedback="false">
+                <n-space>
+                  <n-button type="primary" size="small" @click="handleSearch">
+                    <template #icon><n-icon><SearchOutline /></n-icon></template>
+                    搜索
+                  </n-button>
+                  <n-button size="small" @click="handleReset">
+                    <template #icon><n-icon><RefreshOutline /></n-icon></template>
+                    重置
+                  </n-button>
+                </n-space>
+              </n-form-item>
+            </n-form>
+          </n-collapse-transition>
         </div>
 
         <div class="flex-1 flex flex-col">
@@ -474,7 +485,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, h, type Ref } from 'vue'
+import { ref, reactive, computed, onMounted, h } from 'vue'
 import {
   NForm,
   NFormItem,
@@ -502,15 +513,19 @@ import {
   type FormRules,
   type TreeOption,
   type DataTableColumns,
-  type DataTableRowKey
+  type DataTableRowKey, NCollapseTransition
 } from 'naive-ui'
-import { SearchOutline, RefreshOutline, AddOutline, PersonAddOutline, ShieldCheckmarkOutline, TrashOutline, CloseOutline } from '@vicons/ionicons5'
+import {
+  SearchOutline, RefreshOutline, AddOutline, PersonAddOutline, ShieldCheckmarkOutline, CloseOutline,
+  ChevronDownOutline
+} from '@vicons/ionicons5'
 import {
   getRolePage,
   getRoleDetail,
   createRole,
   updateRole,
   getRoleUsers,
+  getUnassignedUsers,
   addUsersToRole,
   removeUsersFromRole,
   getRolePermissions,
@@ -534,6 +549,8 @@ const statusOptions = [
   { label: '正常', value: 0 },
   { label: '禁用', value: 1 }
 ]
+
+const showSearchForm = ref(false)
 
 const queryParams = reactive<RoleQueryDTO>({
   roleName: undefined,
@@ -1016,7 +1033,7 @@ const loadAddUsers = async () => {
   loadingAddUsers.value = true
   try {
     addUserQueryParams.roleId = currentRole.value.id
-    const res = await getRoleUsers(addUserQueryParams)
+    const res = await getUnassignedUsers(addUserQueryParams)
     addUserList.value = res.records
     addUserTotal.value = res.total
   } catch (error) {

@@ -27,7 +27,7 @@ public record UserCreateDTO(
 
         Integer gender,
 
-        String deptId,
+        String avatar,
 
         List<String> roleIds
 ) {

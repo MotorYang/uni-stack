@@ -5,11 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.motoryang.common.core.exception.BusinessException;
+import com.github.motoryang.system.handler.PermissionCacheLoader;
 import com.github.motoryang.system.modules.relation.entity.RoleMenu;
 import com.github.motoryang.system.modules.relation.entity.RolePermission;
+import com.github.motoryang.system.modules.relation.entity.UserRole;
 import com.github.motoryang.system.modules.relation.mapper.RoleMenuMapper;
 import com.github.motoryang.system.modules.relation.mapper.RolePermissionMapper;
-import com.github.motoryang.system.modules.relation.entity.UserRole;
 import com.github.motoryang.system.modules.relation.mapper.UserRoleMapper;
 import com.github.motoryang.system.modules.role.converter.RoleConverter;
 import com.github.motoryang.system.modules.role.entity.Role;
@@ -46,6 +47,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
     private final UserMapper userMapper;
     private final UserConverter userConverter;
     private final UserRoleMapper userRoleMapper;
+    private final PermissionCacheLoader cacheLoader;
 
     @Override
     public IPage<RoleVO> pageQuery(RoleQueryDTO dto) {
@@ -172,6 +174,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
 
         // 逻辑删除角色
         removeById(id);
+        // 刷新权限缓存
+        cacheLoader.refreshCacheAfterCommit();
     }
 
     @Override
@@ -185,6 +189,22 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         Page<User> page = new Page<>(dto.current(), dto.size());
 
         IPage<User> userPage = userMapper.selectUsersByRoleId(
+                page,
+                dto.roleId(),
+                dto.username(),
+                dto.nickname()
+        );
+
+        Page<UserVO> voPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        voPage.setRecords(userConverter.toVOList(userPage.getRecords()));
+        return voPage;
+    }
+
+    @Override
+    public IPage<UserVO> pageUnassignedUsersByRoleId(RoleUserQueryDTO dto) {
+        Page<User> page = new Page<>(dto.current(), dto.size());
+
+        IPage<User> userPage = userMapper.selectUnassignedUsersByRoleId(
                 page,
                 dto.roleId(),
                 dto.username(),
@@ -241,6 +261,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
                 .toList();
         if (!newIds.isEmpty()) {
             saveRolePermissions(roleId, newIds);
+            cacheLoader.refreshCacheAfterCommit();
         }
     }
 
@@ -250,6 +271,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>()
                 .eq(RolePermission::getRoleId, roleId)
                 .eq(RolePermission::getPermissionId, permissionId));
+        cacheLoader.refreshCacheAfterCommit();
     }
 
     private void saveRoleMenus(String roleId, List<String> menuIds) {

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.common.core.result.ResultCode;
+import com.github.motoryang.system.handler.PermissionCacheLoader;
 import com.github.motoryang.system.modules.permission.converter.PermissionConverter;
 import com.github.motoryang.system.modules.permission.entity.Permission;
 import com.github.motoryang.system.modules.permission.mapper.PermissionMapper;
@@ -35,6 +36,7 @@ public class PermissionServiceImpl implements IPermissionService {
     private final RolePermissionMapper rolePermissionMapper;
     private final PermissionResourceMapper permissionResourceMapper;
     private final PermissionConverter permissionConverter;
+    private final PermissionCacheLoader cacheLoader;
 
     @Override
     public IPage<PermissionVO> page(int pageNum, int pageSize, PermissionQueryDTO query) {
@@ -120,6 +122,7 @@ public class PermissionServiceImpl implements IPermissionService {
                 }
                 permissionResourceMapper.insertBatch(list);
             }
+            cacheLoader.refreshCacheAfterCommit();
         }
     }
 
@@ -137,6 +140,7 @@ public class PermissionServiceImpl implements IPermissionService {
         permissionResourceMapper.deleteByPermissionId(id);
         // 逻辑删除权限
         permissionMapper.deleteById(id);
+        cacheLoader.refreshCacheAfterCommit();
     }
 
     @Override
@@ -168,6 +172,7 @@ public class PermissionServiceImpl implements IPermissionService {
                 list.add(pr);
             }
             permissionResourceMapper.insertBatch(list);
+            cacheLoader.refreshCacheAfterCommit();
         }
     }
 

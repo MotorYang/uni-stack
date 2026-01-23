@@ -14,6 +14,7 @@
         <result property="status" column="status"/>
         <result property="deptId" column="dept_id"/>
         <result property="deptName" column="dept_name"/>
+        <result property="position" column="position"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
         <result property="createBy" column="create_by"/>
@@ -21,11 +22,15 @@
         <result property="deleted" column="deleted"/>
     </resultMap>
 
-    <!-- 分页查询用户 -->
+    <!-- 分页查询用户（包含主职部门信息） -->
     <select id="selectUserPage" resultMap="UserResultMap">
-        SELECT u.*, d.dept_name
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
         FROM sys_user u
-        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
         <where>
             u.deleted = 0
             <if test="user.username != null and user.username != ''">
@@ -40,8 +45,8 @@
             <if test="user.status != null">
                 AND u.status = #{user.status}
             </if>
-            <if test="user.deptId != null">
-                AND u.dept_id = #{user.deptId}
+            <if test="user.deptId != null and user.deptId != ''">
+                AND u.id IN (SELECT user_id FROM sys_user_dept WHERE dept_id = #{user.deptId} AND deleted = 0)
             </if>
         </where>
         ORDER BY u.create_time DESC
@@ -49,9 +54,13 @@
 
     <!-- 分页查询指定角色下的用户 -->
     <select id="selectUsersByRoleId" resultMap="UserResultMap">
-        SELECT u.*, d.dept_name
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
         FROM sys_user u
-        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
         INNER JOIN sys_user_role ur ON u.id = ur.user_id
         <where>
             u.deleted = 0
@@ -68,10 +77,88 @@
 
     <!-- 根据ID查询用户详情 -->
     <select id="selectUserById" resultMap="UserResultMap">
-        SELECT u.*, d.dept_name
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
         FROM sys_user u
-        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
         WHERE u.id = #{id} AND u.deleted = 0
+    </select>
+
+    <!-- 分页查询未分配指定角色的用户（排除已禁用用户） -->
+    <select id="selectUnassignedUsersByRoleId" resultMap="UserResultMap">
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
+        FROM sys_user u
+        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
+        <where>
+            u.deleted = 0
+            AND u.status = 0
+            AND u.id NOT IN (
+                SELECT ur.user_id FROM sys_user_role ur WHERE ur.role_id = #{roleId}
+            )
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
+    <!-- 分页查询指定部门下的用户 -->
+    <select id="selectUsersByDeptId" resultMap="UserResultMap">
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
+        FROM sys_user u
+        INNER JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.dept_id = #{deptId} AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
+        <where>
+            u.deleted = 0
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="status != null">
+                AND u.status = #{status}
+            </if>
+        </where>
+        ORDER BY ud.is_primary DESC, u.create_time DESC
+    </select>
+
+    <!-- 分页查询未分配到指定部门的用户 -->
+    <select id="selectUnassignedUsersByDeptId" resultMap="UserResultMap">
+        SELECT u.*,
+               ud.dept_id,
+               d.dept_name,
+               ud.position
+        FROM sys_user u
+        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
+        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
+        <where>
+            u.deleted = 0
+            AND u.status = 0
+            AND u.id NOT IN (
+                SELECT user_id FROM sys_user_dept WHERE dept_id = #{deptId} AND deleted = 0
+            )
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
     </select>
 
 </mapper>

@@ -44,7 +44,7 @@
           :options="menuOptions"
           :value="activeKey"
           :collapsed="collapsed"
-          :collapsed-width="64"
+          :collapsed-width="56"
           :collapsed-icon-size="22"
           v-model:expanded-keys="expandedKeys"
           @update:value="handleUpdateValue"
@@ -412,13 +412,13 @@ function handleUpdateValue(key: string, item: MenuOption) {
 
 async function handleUserMenuSelect(key: string) {
   if (key === 'profile') {
-    router.push('/profile')
+    await router.push('/profile')
     return
   }
   if (key === 'logout') {
     await userStore.logout()
-    router.push('/login')
     message.success('已退出登录')
+    await router.push('/login')
   }
 }
 </script>
@@ -426,6 +426,7 @@ async function handleUserMenuSelect(key: string) {
 <style scoped>
 /* 侧边栏浮动 */
 .floating-sidebar {
+  overflow: hidden;
   height: calc(100vh - 32px);
   margin: 16px;
   border-radius: 24px;
@@ -456,9 +457,15 @@ async function handleUserMenuSelect(key: string) {
   box-shadow: var(--glass-inset);
 }
 
-/* 菜单选中样式 */
-.glass-menu :deep(.n-menu-item-content--selected) {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%) !important;
+/* 侧边栏折叠后，菜单图标居中 */
+.glass-menu.n-menu--collapsed :deep(.n-menu-item-content) {
+  padding-left: 0 !important;
+  display: flex;
+  justify-content: center;
+  flex-direction: row-reverse;
+}
+.glass-menu.n-menu--collapsed :deep(.n-menu-item-content__icon) {
+  margin-right: 0 !important;
 }
 
 /* 页面切换动画 */

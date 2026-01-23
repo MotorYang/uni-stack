@@ -5,7 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.motoryang.common.core.exception.BusinessException;
+import com.github.motoryang.system.modules.dept.entity.Dept;
+import com.github.motoryang.system.modules.dept.mapper.DeptMapper;
+import com.github.motoryang.system.modules.relation.entity.UserDept;
 import com.github.motoryang.system.modules.relation.entity.UserRole;
+import com.github.motoryang.system.modules.relation.mapper.UserDeptMapper;
 import com.github.motoryang.system.modules.relation.mapper.UserRoleMapper;
 import com.github.motoryang.system.modules.role.entity.Role;
 import com.github.motoryang.system.modules.role.mapper.RoleMapper;
@@ -15,6 +19,7 @@ import com.github.motoryang.system.modules.user.mapper.UserMapper;
 import com.github.motoryang.system.modules.user.model.dto.UserCreateDTO;
 import com.github.motoryang.system.modules.user.model.dto.UserQueryDTO;
 import com.github.motoryang.system.modules.user.model.dto.UserUpdateDTO;
+import com.github.motoryang.system.modules.user.model.vo.UserDeptVO;
 import com.github.motoryang.system.modules.user.model.vo.UserDetailVO;
 import com.github.motoryang.system.modules.user.model.vo.UserVO;
 import com.github.motoryang.system.modules.user.service.IUserService;
@@ -27,6 +32,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现
@@ -37,7 +44,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private final UserConverter userConverter;
     private final UserRoleMapper userRoleMapper;
+    private final UserDeptMapper userDeptMapper;
     private final RoleMapper roleMapper;
+    private final DeptMapper deptMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -76,6 +85,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 获取用户权限
         List<String> permissions = roleMapper.selectPermissionsByUserId(id);
 
+        // 获取用户所有部门关联
+        List<UserDept> userDepts = userDeptMapper.selectByUserId(id);
+        List<UserDeptVO> deptVOs = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(userDepts)) {
+            List<String> deptIds = userDepts.stream().map(UserDept::getDeptId).toList();
+            List<Dept> depts = deptMapper.selectBatchIds(deptIds);
+            Map<String, String> deptNameMap = depts.stream()
+                    .collect(Collectors.toMap(Dept::getId, Dept::getDeptName));
+            deptVOs = userDepts.stream()
+                    .map(ud -> new UserDeptVO(
+                            ud.getDeptId(),
+                            deptNameMap.getOrDefault(ud.getDeptId(), ""),
+                            ud.getIsPrimary(),
+                            ud.getPosition()
+                    ))
+                    .toList();
+        }
+
         return new UserDetailVO(
                 user.getId(),
                 user.getUsername(),
@@ -87,6 +114,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 user.getStatus(),
                 user.getDeptId(),
                 user.getDeptName(),
+                user.getPosition(),
+                deptVOs,
                 roleIds,
                 roleKeys,
                 permissions,
@@ -155,6 +184,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 删除用户角色关联
         userRoleMapper.deleteByUserId(id);
+
+        // 删除用户部门关联
+        userDeptMapper.deleteByUserId(id);
 
         // 逻辑删除用户
         removeById(id);

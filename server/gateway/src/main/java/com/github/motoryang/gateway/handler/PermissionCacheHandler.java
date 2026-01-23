@@ -3,7 +3,6 @@ package com.github.motoryang.gateway.handler;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.motoryang.gateway.messaging.model.ApiPattern;
-import com.github.motoryang.gateway.utils.WhiteListMatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -25,12 +24,6 @@ import java.util.stream.Collectors;
 @Component
 public class PermissionCacheHandler {
 
-    private final WhiteListMatcher whiteListMatcher;
-
-    public PermissionCacheHandler(WhiteListMatcher whiteListMatcher) {
-        this.whiteListMatcher = whiteListMatcher;
-    }
-
     // 预编译后的API权限列表
     private volatile List<ApiPattern> apiPatterns = List.of();
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
@@ -49,10 +42,6 @@ public class PermissionCacheHandler {
      * 鉴权入口
      */
     public boolean hasAccess(Collection<String> userRoles, String method, String path) {
-        // 白名单判断
-        if (whiteListMatcher.isWhitelisted(path)) {
-            return true;
-        }
         if (userRoles == null || userRoles.isEmpty()) {
             return false;
         }

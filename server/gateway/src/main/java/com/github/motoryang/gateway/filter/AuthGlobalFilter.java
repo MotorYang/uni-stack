@@ -54,6 +54,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         // 白名单或公开静态资源跳过认证
         if (whiteListMatcher.isWhitelisted(path) || publicResourceMatcher.isPublicByPrefix(path)) {
+            exchange.getAttributes().put(Constants.SKIP_SECURITY, Boolean.TRUE);
             return chain.filter(exchange);
         }
 
@@ -69,7 +70,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             String username = claims.get("username", String.class);
             @SuppressWarnings("unchecked")
             List<String> roles = claims.get("roles", List.class);
-            String rolesStr = roles != null ? String.join(",", roles) : "";
+            if (roles == null || roles.isEmpty()) {
+                return TokenUtils.unauthorized(exchange, "未获取到角色信息");
+            }
+            String rolesStr = String.join(",", roles);
 
             // 校验 Redis 中的 Token，并获取权限列表
             return reactiveStringRedisTemplate.opsForValue()
@@ -82,22 +86,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         if (!redisToken.equals(token)) {
                             return TokenUtils.unauthorized(exchange, "账号已在别处登录");
                         }
-                        // 从 Redis 获取权限列表
-                        return reactiveStringRedisTemplate.opsForSet()
-                                .members(RedisConstants.REDIS_USER_PERMS_KEY + userId)
-                                .collectList()
-                                .map(perms -> String.join(",", perms))
-                                .defaultIfEmpty("")
-                                .flatMap(permsStr -> {
-                                    // 构建带有用户信息的 Request
-                                    var mutatedRequest = request.mutate()
-                                            .header(Constants.USER_ID_HEADER, userId)
-                                            .header(Constants.USERNAME_HEADER, username)
-                                            .header(Constants.USER_ROLES_HEADER, rolesStr)
-                                            .header(Constants.USER_PERMS_HEADER, permsStr)
-                                            .build();
-                                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
-                                });
+                        // 构建带有用户信息的 Request
+                        var mutatedRequest = request.mutate()
+                                .header(Constants.USER_ID_HEADER, userId)
+                                .header(Constants.USERNAME_HEADER, username)
+                                .header(Constants.USER_ROLES_HEADER, rolesStr)
+                                .build();
+                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
                     });
 
         } catch (ExpiredJwtException e) {

@@ -25,8 +25,6 @@ public record UserUpdateDTO(
 
         Integer status,
 
-        String deptId,
-
         List<String> roleIds
 ) {
 }

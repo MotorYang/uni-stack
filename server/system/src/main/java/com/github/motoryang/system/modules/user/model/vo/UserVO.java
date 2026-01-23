@@ -16,6 +16,7 @@ public record UserVO(
         Integer status,
         String deptId,
         String deptName,
+        String position,
         LocalDateTime createTime
 ) {
 }
