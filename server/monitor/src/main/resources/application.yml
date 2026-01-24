@@ -21,14 +21,14 @@ spring:
       username: uni-stack
       password: 745700Yxy@
       discovery:
-        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
         namespace: ${NACOS_NAMESPACE:uni-stack}
         # 监控服务的元数据，用于 Spring Boot Admin 识别
         metadata:
           management:
             context-path: /actuator
       config:
-        server-addr: ${NACOS_SERVER:192.168.1.97:8848}
+        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
         namespace: ${NACOS_NAMESPACE:uni-stack}
         file-extension: yaml
 
