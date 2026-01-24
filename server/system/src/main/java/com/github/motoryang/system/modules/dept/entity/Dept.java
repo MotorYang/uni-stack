@@ -57,6 +57,11 @@ public class Dept extends BaseEntity {
     private Integer status;
 
     /**
+     * 类别（C公司 D部门）
+     */
+    private String deptType;
+
+    /**
      * 子部门（非数据库字段）
      */
     @TableField(exist = false)

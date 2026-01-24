@@ -16,6 +16,7 @@ public record DeptVO(
         String phone,
         String email,
         Integer status,
+        String deptType,
         LocalDateTime createTime,
         List<DeptVO> children
 ) {

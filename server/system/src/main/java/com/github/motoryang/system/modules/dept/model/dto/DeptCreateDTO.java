@@ -21,7 +21,9 @@ public record DeptCreateDTO(
         String phone,
 
         @Email(message = "邮箱格式不正确")
-        String email
+        String email,
+
+        String deptType
 ) {
     public DeptCreateDTO {
         if (parentId == null || parentId.isBlank()) {
@@ -29,6 +31,9 @@ public record DeptCreateDTO(
         }
         if (sort == null) {
             sort = 0;
+        }
+        if (deptType == null || deptType.isBlank()) {
+            deptType = "D";
         }
     }
 }

@@ -91,15 +91,73 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!CollectionUtils.isEmpty(userDepts)) {
             List<String> deptIds = userDepts.stream().map(UserDept::getDeptId).toList();
             List<Dept> depts = deptMapper.selectBatchIds(deptIds);
-            Map<String, String> deptNameMap = depts.stream()
-                    .collect(Collectors.toMap(Dept::getId, Dept::getDeptName));
+            Map<String, Dept> deptMap = depts.stream()
+                    .collect(Collectors.toMap(Dept::getId, d -> d));
+
+            // 收集所有需要查询的祖级部门ID（用于查找所属公司）
+            List<String> allAncestorIds = depts.stream()
+                    .filter(d -> d.getAncestors() != null && !d.getAncestors().isEmpty())
+                    .flatMap(d -> {
+                        String[] ids = d.getAncestors().split(",");
+                        return java.util.Arrays.stream(ids).filter(s -> !"0".equals(s));
+                    })
+                    .distinct()
+                    .toList();
+
+            // 查询所有祖级部门
+            Map<String, Dept> ancestorDeptMap = new java.util.HashMap<>();
+            if (!allAncestorIds.isEmpty()) {
+                List<Dept> ancestorDepts = deptMapper.selectBatchIds(allAncestorIds);
+                ancestorDeptMap = ancestorDepts.stream()
+                        .collect(Collectors.toMap(Dept::getId, d -> d));
+            }
+
+            final Map<String, Dept> finalAncestorDeptMap = ancestorDeptMap;
             deptVOs = userDepts.stream()
-                    .map(ud -> new UserDeptVO(
-                            ud.getDeptId(),
-                            deptNameMap.getOrDefault(ud.getDeptId(), ""),
-                            ud.getIsPrimary(),
-                            ud.getPosition()
-                    ))
+                    .map(ud -> {
+                        Dept dept = deptMap.get(ud.getDeptId());
+                        String deptName = dept != null ? dept.getDeptName() : "";
+                        String deptType = dept != null ? dept.getDeptType() : "D";
+
+                        // 查找所属公司
+                        String companyId = null;
+                        String companyName = null;
+
+                        if (dept != null) {
+                            // 如果当前部门本身就是公司
+                            if ("C".equals(deptType)) {
+                                companyId = dept.getId();
+                                companyName = dept.getDeptName();
+                            } else if (dept.getAncestors() != null && !dept.getAncestors().isEmpty()) {
+                                // 从祖级中查找最近的公司类型部门
+                                String[] ancestorIds = dept.getAncestors().split(",");
+                                // 从后往前找（最近的公司）
+                                for (int i = ancestorIds.length - 1; i >= 0; i--) {
+                                    String ancestorId = ancestorIds[i];
+                                    if ("0".equals(ancestorId)) continue;
+                                    Dept ancestor = finalAncestorDeptMap.get(ancestorId);
+                                    if (ancestor != null && "C".equals(ancestor.getDeptType())) {
+                                        companyId = ancestor.getId();
+                                        companyName = ancestor.getDeptName();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (ud.getIsPrimary() == 1) {
+                            user.setDeptId(ud.getDeptId());
+                            user.setDeptName(deptName);
+                        }
+                        return new UserDeptVO(
+                                ud.getDeptId(),
+                                deptName,
+                                deptType,
+                                companyId,
+                                companyName,
+                                ud.getIsPrimary(),
+                                ud.getPosition());
+                    })
                     .toList();
         }
 

@@ -11,6 +11,7 @@ export interface DeptVO {
   phone: string | null
   email: string | null
   status: number
+  deptType: string
   createTime: string
   children?: DeptVO[] | null
 }
@@ -18,6 +19,7 @@ export interface DeptVO {
 export interface DeptQueryDTO {
   deptName?: string
   status?: number
+  deptType?: string
 }
 
 export interface DeptCreateDTO {
@@ -27,6 +29,7 @@ export interface DeptCreateDTO {
   leader?: string
   phone?: string
   email?: string
+  deptType?: string
 }
 
 export interface DeptUpdateDTO {
@@ -37,6 +40,7 @@ export interface DeptUpdateDTO {
   phone?: string
   email?: string
   status?: number
+  deptType?: string
 }
 
 export interface DeptUserQueryDTO {

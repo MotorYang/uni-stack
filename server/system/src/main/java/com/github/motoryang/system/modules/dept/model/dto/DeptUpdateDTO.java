@@ -21,6 +21,8 @@ public record DeptUpdateDTO(
         @Email(message = "邮箱格式不正确")
         String email,
 
-        Integer status
+        Integer status,
+
+        String deptType
 ) {
 }

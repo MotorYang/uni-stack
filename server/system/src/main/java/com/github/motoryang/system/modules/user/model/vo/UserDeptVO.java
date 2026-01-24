@@ -6,6 +6,9 @@ package com.github.motoryang.system.modules.user.model.vo;
 public record UserDeptVO(
         String deptId,
         String deptName,
+        String deptType,
+        String companyId,
+        String companyName,
         Integer isPrimary,
         String position
 ) {

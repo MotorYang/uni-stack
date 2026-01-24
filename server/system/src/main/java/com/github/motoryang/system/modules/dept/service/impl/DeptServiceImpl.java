@@ -37,6 +37,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept> implements ID
         LambdaQueryWrapper<Dept> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(dto.deptName()), Dept::getDeptName, dto.deptName())
                 .eq(dto.status() != null, Dept::getStatus, dto.status())
+                .eq(StringUtils.hasText(dto.deptType()), Dept::getDeptType, dto.deptType())
                 .orderByAsc(Dept::getSort)
                 .orderByAsc(Dept::getId);
 
@@ -195,6 +196,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept> implements ID
                 parent.phone(),
                 parent.email(),
                 parent.status(),
+                parent.deptType(),
                 parent.createTime(),
                 childrenWithSub
         );

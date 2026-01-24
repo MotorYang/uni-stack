@@ -77,13 +77,8 @@
 
     <!-- 根据ID查询用户详情 -->
     <select id="selectUserById" resultMap="UserResultMap">
-        SELECT u.*,
-               ud.dept_id,
-               d.dept_name,
-               ud.position
+        SELECT u.*
         FROM sys_user u
-        LEFT JOIN sys_user_dept ud ON u.id = ud.user_id AND ud.is_primary = 1 AND ud.deleted = 0
-        LEFT JOIN sys_dept d ON ud.dept_id = d.id AND d.deleted = 0
         WHERE u.id = #{id} AND u.deleted = 0
     </select>
 

@@ -1,4 +1,5 @@
 import request from './request'
+import { type UserDeptVO } from '@/api/user'
 
 export interface LoginData {
   username: string
@@ -26,6 +27,8 @@ export interface UserInfo {
   status: number
   deptId: string
   deptName: string
+  posttion: string
+  depts: UserDeptVO[]
   roleIds: string[]
   roles: string[]
   permissions: string[]

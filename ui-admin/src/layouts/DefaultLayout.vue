@@ -102,6 +102,23 @@
         </div>
 
         <div class="flex items-center gap-3">
+          <n-dropdown
+            v-if="deptOptions.length > 1"
+            trigger="click"
+            :options="deptOptions"
+            :render-label="renderDeptLabel"
+            @select="handleDeptSelect"
+            placement="bottom-start"
+          >
+            <n-button quaternary class="header-icon-btn dept-switch-btn">
+              <template #icon><n-icon size="18" :component="BusinessOutline" /></template>
+              <div class="ml-1.5 hidden lg:flex flex-col items-start leading-tight">
+                <span class="text-[10px] opacity-50">{{ currentDeptInfo.company }}</span>
+                <span class="text-xs font-medium max-w-28 truncate">{{ currentDeptInfo.dept }}</span>
+              </div>
+            </n-button>
+          </n-dropdown>
+
           <n-button circle quaternary class="header-icon-btn" @click="themeStore.toggleTheme">
             <template #icon><n-icon size="20" :component="themeStore.isDark ? MoonOutline : SunnyOutline" /></template>
           </n-button>
@@ -161,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, h, type Component, watch, onMounted } from 'vue'
+  import { ref, h, type Component, watch, watchEffect, onMounted, computed } from 'vue'
 import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
 import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage, NDivider } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
@@ -169,13 +186,14 @@ import { useUserStore } from '@/stores/user'
 import { getUserMenuTree, type MenuVO } from '@/api/menu'
 import { getUserIdFromToken } from '@/utils/jwt'
 import * as Ionicons from '@vicons/ionicons5'
-import { 
-  Layers, 
-  Search, 
-  NotificationsOutline, 
+import {
+  Layers,
+  Search,
+  NotificationsOutline,
   SunnyOutline,
   MoonOutline,
-  MenuOutline
+  MenuOutline,
+  BusinessOutline
 } from '@vicons/ionicons5'
 
 const themeStore = useThemeStore()
@@ -183,6 +201,71 @@ const userStore = useUserStore()
 const collapsed = ref(false)
 const message = useMessage()
 const isMenuLoaded = ref(false)
+
+// 同步主题到 document，让全局下拉菜单也能感知主题
+watchEffect(() => {
+  if (themeStore.isDark) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+})
+
+const deptOptions = computed<DropdownOption[]>(() => {
+  const depts = userStore.userInfo?.depts || []
+  return depts.map(dept => {
+    const position = dept.position || '成员'
+    const isCompany = dept.deptType === 'C'
+    const companyLabel = isCompany ? '公司' : (dept.companyName || '未知公司')
+
+    return {
+      key: dept.deptId,
+      label: `${dept.deptName} - ${position}`,
+      companyLabel,
+      deptLabel: `${dept.deptName} - ${position}`
+    } as DropdownOption & { companyLabel: string; deptLabel: string }
+  })
+})
+
+function renderDeptLabel(option: DropdownOption) {
+  const opt = option as DropdownOption & { companyLabel: string; deptLabel: string }
+  return h('div', { class: 'dept-option' }, [
+    h('div', { class: 'dept-option-company' }, opt.companyLabel || ''),
+    h('div', { class: 'dept-option-name' }, opt.deptLabel || '')
+  ])
+}
+
+const currentDeptId = computed(() => userStore.userInfo?.deptId || '')
+
+const currentDeptInfo = computed(() => {
+  const depts = userStore.userInfo?.depts || []
+  const currentDept = depts.find(d => d.deptId === currentDeptId.value)
+  if (!currentDept) {
+    return {
+      company: '',
+      dept: userStore.userInfo?.deptName || ''
+    }
+  }
+
+  if (currentDept.deptType === 'C') {
+    return {
+      company: '公司',
+      dept: currentDept.deptName
+    }
+  }
+  return {
+    company: currentDept.companyName || '',
+    dept: currentDept.deptName
+  }
+})
+
+function handleDeptSelect(key: string) {
+  const depts = userStore.userInfo?.depts || []
+  const selected = depts.find(d => d.deptId === key)
+  if (selected) {
+    userStore.setCurrentDept(key, selected.deptName)
+  }
+}
 
 
 function renderIcon(icon: Component) {
@@ -478,5 +561,37 @@ async function handleUserMenuSelect(key: string) {
 .menu-scroll::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* 部门切换按钮 */
+.dept-switch-btn {
+  padding: 4px 12px !important;
+  height: auto !important;
+  min-height: 36px !important;
+  border-radius: 12px !important;
+}
+</style>
+
+<style>
+/* 部门下拉选项 */
+.dept-option {
+  padding: 2px 0;
+}
+
+.dept-option-company {
+  font-size: 12px;
+  opacity: 0.5;
+  line-height: 1.3;
+}
+
+.dept-option-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 深色主题 */
+html.dark .dept-option {
+  color: #e2e8f0;
 }
 </style>

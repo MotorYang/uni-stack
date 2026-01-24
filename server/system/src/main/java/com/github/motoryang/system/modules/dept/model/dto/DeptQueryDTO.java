@@ -5,6 +5,7 @@ package com.github.motoryang.system.modules.dept.model.dto;
  */
 public record DeptQueryDTO(
         String deptName,
-        Integer status
+        Integer status,
+        String deptType
 ) {
 }

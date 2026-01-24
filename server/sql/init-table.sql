@@ -17,6 +17,7 @@ CREATE TABLE sys_dept (
     parent_id CHAR(36) DEFAULT '0' COMMENT '父部门ID',
     ancestors VARCHAR(500) DEFAULT '' COMMENT '祖级列表',
     dept_name VARCHAR(50) NOT NULL COMMENT '部门名称',
+    dept_type char(1) DEFAULT 'D' COMMENT '类别（C公司 D部门）',
     sort INT DEFAULT 0 COMMENT '显示顺序',
     leader VARCHAR(50) DEFAULT NULL COMMENT '负责人',
     phone VARCHAR(20) DEFAULT NULL COMMENT '联系电话',

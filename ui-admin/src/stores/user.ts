@@ -1,17 +1,17 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
 import {
-  login as loginApi,
-  refresh as refreshApi,
-  logout as logoutApi,
   getUserInfo as getUserInfoApi,
-  updateUserInfo as updateUserInfoApi,
+  login as loginApi,
   type LoginData,
+  logout as logoutApi,
+  refresh as refreshApi,
   type RefreshTokenData,
-  type UserInfo,
-  type UpdateUserInfoPayload
+  updateUserInfo as updateUserInfoApi,
+  type UpdateUserInfoPayload,
+  type UserInfo
 } from '@/api/auth'
-import { getUserIdFromToken } from '@/utils/jwt'
+import {getUserIdFromToken} from '@/utils/jwt'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
@@ -41,6 +41,8 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await loginApi(loginForm)
       setTokens(res.accessToken, res.refreshToken)
+      // 获取用户信息并存储到userInfo中
+      userInfo.value = await getUserInfo()
       return true
     } catch (error) {
       throw error
@@ -105,6 +107,13 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const setCurrentDept = (deptId: string, deptName: string) => {
+    if (userInfo.value) {
+      userInfo.value.deptId = deptId
+      userInfo.value.deptName = deptName
+    }
+  }
+
   return {
     token,
     refreshToken,
@@ -116,6 +125,7 @@ export const useUserStore = defineStore('user', () => {
     refresh,
     getUserInfo,
     logout,
-    updateUserInfo
+    updateUserInfo,
+    setCurrentDept
   }
 })

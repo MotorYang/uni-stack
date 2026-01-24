@@ -3,6 +3,9 @@ import request from './request'
 export interface UserDeptVO {
   deptId: string
   deptName: string
+  deptType: string
+  companyId: string | null
+  companyName: string | null
   isPrimary: number
   position: string
 }

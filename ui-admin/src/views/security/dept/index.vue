@@ -49,8 +49,8 @@
               <n-tag size="small" round :bordered="false" type="info">{{ deptCount }} 个</n-tag>
             </div>
             <n-space size="small">
-              <n-button type="primary" size="small" @click="handleAddDeptRoot">
-                新增
+              <n-button type="primary" size="small" @click="handleAddRootCompany">
+                新增公司
               </n-button>
               <n-button size="small" @click="handleRefreshDeptTree">
                 <template #icon><n-icon><RefreshOutline /></n-icon></template>
@@ -113,6 +113,11 @@
                   </n-descriptions-item>
                   <n-descriptions-item label="上级部门">
                     <n-text>{{ parentDeptName }}</n-text>
+                  </n-descriptions-item>
+                  <n-descriptions-item label="类别">
+                    <n-tag :type="currentDept.deptType === 'C' ? 'info' : 'default'" size="small">
+                      {{ getDeptTypeLabel(currentDept.deptType) }}
+                    </n-tag>
                   </n-descriptions-item>
                   <n-descriptions-item label="负责人">
                     <n-text>{{ currentDept.leader || '-' }}</n-text>
@@ -223,7 +228,7 @@
         label-placement="left"
         label-width="90"
       >
-        <n-form-item label="上级部门" path="parentId">
+        <n-form-item v-if="!isRootCompany" label="上级部门" path="parentId">
           <n-tree-select
             v-model:value="deptFormData.parentId"
             :options="deptTreeOptions"
@@ -232,8 +237,16 @@
             default-expand-all
           />
         </n-form-item>
-        <n-form-item label="部门名称" path="deptName">
-          <n-input v-model:value="deptFormData.deptName" placeholder="请输入部门名称" />
+        <n-form-item :label="isRootCompany ? '公司名称' : '部门名称'" path="deptName">
+          <n-input v-model:value="deptFormData.deptName" :placeholder="isRootCompany ? '请输入公司名称' : '请输入部门名称'" />
+        </n-form-item>
+        <n-form-item v-if="!isRootCompany" label="类别" path="deptType">
+          <n-radio-group v-model:value="deptFormData.deptType">
+            <n-space>
+              <n-radio value="C">公司</n-radio>
+              <n-radio value="D">部门</n-radio>
+            </n-space>
+          </n-radio-group>
         </n-form-item>
         <n-form-item label="排序" path="sort">
           <n-input-number v-model:value="deptFormData.sort" :min="0" class="!w-full" />
@@ -396,7 +409,7 @@ import {
   type TreeSelectOption,
   type DataTableColumns, NCollapseTransition
 } from 'naive-ui'
-import {SearchOutline, RefreshOutline, ChevronDownOutline} from '@vicons/ionicons5'
+import {SearchOutline, RefreshOutline, ChevronDownOutline, BusinessOutline} from '@vicons/ionicons5'
 import { getDeptTree, createDept, updateDept, deleteDept, getDeptUsers, assignUsersToDept, removeUsersFromDept, type DeptVO, type DeptCreateDTO, type DeptUpdateDTO, type DeptUserQueryDTO } from '@/api/dept'
 import { getUserPage, type UserVO, type UserQueryDTO, type PageResult } from '@/api/user'
 import { setPosition, type SetPositionDTO } from '@/api/dept'
@@ -412,6 +425,15 @@ const statusOptions = [
   { label: '正常', value: 0 },
   { label: '停用', value: 1 }
 ]
+
+const deptTypeOptions = [
+  { label: '公司', value: 'C' },
+  { label: '部门', value: 'D' }
+]
+
+const getDeptTypeLabel = (type: string) => {
+  return type === 'C' ? '公司' : '部门'
+}
 
 const showSearchForm = ref(false)
 
@@ -431,6 +453,10 @@ const buildTreeData = (nodes: DeptVO[]): TreeOption[] => {
   return nodes.map(node => ({
     key: node.id,
     label: node.deptName,
+    isCompany: node.deptType === 'C',
+    prefix: node.deptType === 'C'
+      ? () => h(NIcon, { size: 16, class: 'mr-1 text-blue-500' }, { default: () => h(BusinessOutline) })
+      : undefined,
     children: node.children ? buildTreeData(node.children) : undefined
   }))
 }
@@ -522,7 +548,8 @@ const deptFormData = reactive<DeptCreateDTO & DeptUpdateDTO>({
   leader: '',
   phone: '',
   email: '',
-  status: 0
+  status: 0,
+  deptType: 'D'
 })
 
 const deptFormRules: FormRules = {
@@ -533,29 +560,31 @@ const deptFormRules: FormRules = {
 }
 
 const deptTreeOptions = computed<TreeSelectOption[]>(() => {
-  const options: TreeSelectOption[] = [{ key: '0', label: '根节点' }]
   const buildOptions = (nodes: DeptVO[]): TreeSelectOption[] =>
     nodes.map(node => ({
       key: node.id,
       label: node.deptName,
       children: node.children ? buildOptions(node.children) : undefined
     }))
-  options.push(...buildOptions(deptTree.value))
-  return options
+  return buildOptions(deptTree.value)
 })
 
-const handleAddDeptRoot = () => {
+const isRootCompany = ref(false)
+
+const handleAddRootCompany = () => {
   isEditDept.value = false
-  deptModalTitle.value = '新增部门'
+  isRootCompany.value = true
+  deptModalTitle.value = '新增公司'
   editingDeptId.value = null
   Object.assign(deptFormData, {
-    parentId: '0',
+    parentId: undefined,
     deptName: '',
     sort: 0,
     leader: '',
     phone: '',
     email: '',
-    status: 0
+    status: 0,
+    deptType: 'C'
   })
   showDeptModal.value = true
 }
@@ -563,6 +592,7 @@ const handleAddDeptRoot = () => {
 const handleAddChildDept = () => {
   if (!currentDept.value) return
   isEditDept.value = false
+  isRootCompany.value = false
   deptModalTitle.value = '新增子部门'
   editingDeptId.value = null
   Object.assign(deptFormData, {
@@ -572,7 +602,8 @@ const handleAddChildDept = () => {
     leader: '',
     phone: '',
     email: '',
-    status: 0
+    status: 0,
+    deptType: 'D'
   })
   showDeptModal.value = true
 }
@@ -580,6 +611,7 @@ const handleAddChildDept = () => {
 const handleEditDept = () => {
   if (!currentDept.value) return
   isEditDept.value = true
+  isRootCompany.value = currentDept.value.parentId === '0'
   deptModalTitle.value = '编辑部门'
   editingDeptId.value = currentDept.value.id
   Object.assign(deptFormData, {
@@ -589,7 +621,8 @@ const handleEditDept = () => {
     leader: currentDept.value.leader || '',
     phone: currentDept.value.phone || '',
     email: currentDept.value.email || '',
-    status: currentDept.value.status
+    status: currentDept.value.status,
+    deptType: currentDept.value.deptType || 'D'
   })
   showDeptModal.value = true
 }
@@ -611,18 +644,20 @@ const handleSaveDept = async () => {
         leader: deptFormData.leader,
         phone: deptFormData.phone,
         email: deptFormData.email,
-        status: deptFormData.status
+        status: deptFormData.status,
+        deptType: deptFormData.deptType
       }
       await updateDept(editingDeptId.value, payload)
       message.success('更新成功')
     } else {
       const payload: DeptCreateDTO = {
-        parentId: deptFormData.parentId,
+        parentId: isRootCompany.value ? '0' : deptFormData.parentId,
         deptName: deptFormData.deptName,
         sort: deptFormData.sort,
         leader: deptFormData.leader || undefined,
         phone: deptFormData.phone || undefined,
-        email: deptFormData.email || undefined
+        email: deptFormData.email || undefined,
+        deptType: isRootCompany.value ? 'C' : deptFormData.deptType
       }
       await createDept(payload)
       message.success('创建成功')
