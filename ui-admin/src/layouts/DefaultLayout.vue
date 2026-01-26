@@ -123,11 +123,96 @@
             <template #icon><n-icon size="20" :component="themeStore.isDark ? MoonOutline : SunnyOutline" /></template>
           </n-button>
 
-          <n-badge dot type="error" :offset="[-4, 4]" processing>
-            <n-button circle quaternary class="header-icon-btn">
-              <template #icon><n-icon size="20" :component="NotificationsOutline" /></template>
-            </n-button>
-          </n-badge>
+          <n-popover trigger="click" placement="bottom" :width="360" class="message-popover">
+            <template #trigger>
+              <n-badge :value="unreadCount" :max="99" :offset="[-4, 4]" :show="unreadCount > 0">
+                <n-button circle quaternary class="header-icon-btn">
+                  <template #icon><n-icon size="20" :component="NotificationsOutline" /></template>
+                </n-button>
+              </n-badge>
+            </template>
+            <div class="message-panel">
+              <n-tabs v-model:value="messageTab" type="line" animated>
+                <n-tab-pane name="unread" :tab="`未读 (${unreadCount})`">
+                  <n-scrollbar style="max-height: 320px">
+                    <div v-if="unreadMessages.length === 0" class="py-8">
+                      <n-empty description="暂无未读消息" />
+                    </div>
+                    <div v-else class="message-list">
+                      <div
+                        v-for="msg in unreadMessages"
+                        :key="msg.id"
+                        class="message-item"
+                        @click="handleReadMessage(msg)"
+                      >
+                        <div class="message-icon" :style="{ color: getMessageColor(msg.type) }">
+                          <n-icon size="20" :component="getMessageIcon(msg.type)" />
+                        </div>
+                        <div class="message-content">
+                          <div class="message-title">{{ msg.title }}</div>
+                          <div class="message-desc">{{ msg.content }}</div>
+                          <div class="message-time">{{ msg.time }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </n-scrollbar>
+                  <div v-if="unreadMessages.length > 0" class="message-footer">
+                    <n-button text type="primary" @click="handleReadAll">全部标为已读</n-button>
+                  </div>
+                </n-tab-pane>
+                <n-tab-pane name="read" tab="已读">
+                  <n-scrollbar style="max-height: 320px">
+                    <div v-if="readMessages.length === 0" class="py-8">
+                      <n-empty description="暂无已读消息" />
+                    </div>
+                    <div v-else class="message-list">
+                      <div v-for="msg in readMessages" :key="msg.id" class="message-item read">
+                        <div class="message-icon" :style="{ color: getMessageColor(msg.type) }">
+                          <n-icon size="20" :component="getMessageIcon(msg.type)" />
+                        </div>
+                        <div class="message-content">
+                          <div class="message-title">{{ msg.title }}</div>
+                          <div class="message-desc">{{ msg.content }}</div>
+                          <div class="message-time">{{ msg.time }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </n-scrollbar>
+                </n-tab-pane>
+                <n-tab-pane name="history" tab="历史">
+                  <n-scrollbar style="max-height: 320px">
+                    <div v-if="historyMessages.length === 0" class="py-8">
+                      <n-empty description="暂无历史消息" />
+                    </div>
+                    <div v-else class="message-list">
+                      <div v-for="msg in historyMessages" :key="msg.id" class="message-item" :class="{ read: msg.read }">
+                        <div class="message-icon" :style="{ color: getMessageColor(msg.type) }">
+                          <n-icon size="20" :component="getMessageIcon(msg.type)" />
+                        </div>
+                        <div class="message-content">
+                          <div class="message-title">
+                            {{ msg.title }}
+                            <n-tag v-if="!msg.read" size="small" type="error" :bordered="false" class="ml-2">未读</n-tag>
+                          </div>
+                          <div class="message-desc">{{ msg.content }}</div>
+                          <div class="message-time">{{ msg.time }}</div>
+                        </div>
+                        <n-button
+                          quaternary
+                          circle
+                          size="small"
+                          class="message-delete-btn"
+                          @click.stop="handleDeleteMessage(msg)"
+                        >
+                          <template #icon><n-icon size="16" :component="TrashOutline" /></template>
+                        </n-button>
+                      </div>
+                    </div>
+                  </n-scrollbar>
+                </n-tab-pane>
+              </n-tabs>
+            </div>
+          </n-popover>
 
           <n-divider vertical class="mx-2 opacity-10" />
 
@@ -180,7 +265,7 @@
 <script setup lang="ts">
   import { ref, h, type Component, watch, watchEffect, onMounted, computed } from 'vue'
 import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
-import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, useMessage, NDivider } from 'naive-ui'
+import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, NPopover, NTabs, NTabPane, NEmpty, NTag, NScrollbar, useMessage, NDivider } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
 import { getUserMenuTree, type MenuVO } from '@/api/menu'
@@ -193,7 +278,12 @@ import {
   SunnyOutline,
   MoonOutline,
   MenuOutline,
-  BusinessOutline
+  BusinessOutline,
+  CheckmarkCircleOutline,
+  AlertCircleOutline,
+  InformationCircleOutline,
+  WarningOutline,
+  TrashOutline
 } from '@vicons/ionicons5'
 
 const themeStore = useThemeStore()
@@ -201,6 +291,74 @@ const userStore = useUserStore()
 const collapsed = ref(false)
 const message = useMessage()
 const isMenuLoaded = ref(false)
+
+// 消息功能
+interface Message {
+  id: string
+  title: string
+  content: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  time: string
+  read: boolean
+}
+
+const messageTab = ref('unread')
+
+const mockMessages: Message[] = [
+  { id: '1', title: '系统更新通知', content: '系统将于今晚 22:00 进行维护升级，预计持续 2 小时', type: 'warning', time: '5 分钟前', read: false },
+  { id: '2', title: '新用户注册', content: '用户 张三 已完成注册，请及时审核', type: 'info', time: '15 分钟前', read: false },
+  { id: '3', title: '订单支付成功', content: '订单 #20240126001 支付成功，金额 ¥1,280.00', type: 'success', time: '30 分钟前', read: false },
+  { id: '4', title: '库存预警', content: '商品「无线蓝牙耳机」库存不足 10 件，请及时补货', type: 'error', time: '1 小时前', read: true },
+  { id: '5', title: '审批通过', content: '您提交的请假申请已通过审批', type: 'success', time: '2 小时前', read: true },
+  { id: '6', title: '新评论', content: '您的文章收到了一条新评论', type: 'info', time: '3 小时前', read: true },
+  { id: '7', title: '安全提醒', content: '检测到您的账号在新设备上登录', type: 'warning', time: '昨天 18:30', read: true },
+  { id: '8', title: '任务完成', content: '定时任务「数据备份」执行成功', type: 'success', time: '昨天 12:00', read: true },
+]
+
+const messages = ref<Message[]>(mockMessages)
+
+const unreadMessages = computed(() => messages.value.filter(m => !m.read))
+const readMessages = computed(() => messages.value.filter(m => m.read).slice(0, 5))
+const historyMessages = computed(() => messages.value)
+const unreadCount = computed(() => unreadMessages.value.length)
+
+function getMessageIcon(type: Message['type']) {
+  const icons = {
+    info: InformationCircleOutline,
+    success: CheckmarkCircleOutline,
+    warning: WarningOutline,
+    error: AlertCircleOutline
+  }
+  return icons[type]
+}
+
+function getMessageColor(type: Message['type']) {
+  const colors = {
+    info: '#2080f0',
+    success: '#18a058',
+    warning: '#f0a020',
+    error: '#d03050'
+  }
+  return colors[type]
+}
+
+function handleReadMessage(msg: Message) {
+  msg.read = true
+  message.success('已标记为已读')
+}
+
+function handleReadAll() {
+  messages.value.forEach(m => m.read = true)
+  message.success('已全部标记为已读')
+}
+
+function handleDeleteMessage(msg: Message) {
+  const index = messages.value.findIndex(m => m.id === msg.id)
+  if (index > -1) {
+    messages.value.splice(index, 1)
+    message.success('已删除')
+  }
+}
 
 // 同步主题到 document，让全局下拉菜单也能感知主题
 watchEffect(() => {
@@ -593,5 +751,95 @@ async function handleUserMenuSelect(key: string) {
 /* 深色主题 */
 html.dark .dept-option {
   color: #e2e8f0;
+}
+
+/* 消息面板 */
+.message-panel {
+  margin: -12px -16px;
+}
+
+.message-panel .n-tabs-nav {
+  padding: 0 16px;
+}
+
+.message-list {
+  padding: 8px 0;
+}
+
+.message-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.message-item:hover {
+  background: var(--glass-bg-light);
+}
+
+.message-item.read {
+  opacity: 0.6;
+}
+
+.message-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-light);
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+}
+
+.message-desc {
+  font-size: 13px;
+  color: var(--text-sec);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-time {
+  font-size: 12px;
+  color: var(--text-sec);
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.message-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--glass-border);
+  text-align: center;
+}
+
+.message-delete-btn {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.message-item:hover .message-delete-btn {
+  opacity: 0.6;
+}
+
+.message-delete-btn:hover {
+  opacity: 1 !important;
+  color: #d03050 !important;
 }
 </style>

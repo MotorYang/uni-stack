@@ -58,6 +58,7 @@
           :row-key="(row: UserVO) => row.id"
           :bordered="false"
           :single-line="false"
+          :scroll-x="1200"
           flex-height
           style="min-height: 400px"
           @update:page="handlePageChange"
@@ -218,12 +219,13 @@ import {
   NTag,
   NAvatar,
   NPopconfirm,
+  NTooltip,
   useMessage,
   type FormInst,
   type FormRules,
   type DataTableColumns
 } from 'naive-ui'
-import { SearchOutline, RefreshOutline, AddOutline } from '@vicons/ionicons5'
+import { SearchOutline, RefreshOutline, AddOutline, CreateOutline, KeyOutline, TrashOutline } from '@vicons/ionicons5'
 import {
   getUserPage,
   createUser,
@@ -332,30 +334,45 @@ const columns: DataTableColumns<UserVO> = [
   {
     title: '操作',
     key: 'actions',
-    width: 200,
+    width: 140,
     fixed: 'right',
     render: row =>
-      h(NSpace, null, {
+      h(NSpace, { size: 'small', wrap: false }, {
         default: () => [
           h(
-            NButton,
+            NTooltip,
+            null,
             {
-              size: 'small',
-              quaternary: true,
-              type: 'primary',
-              onClick: () => handleEdit(row)
-            },
-            { default: () => '编辑' }
+              trigger: () =>
+                h(
+                  NButton,
+                  {
+                    size: 'small',
+                    quaternary: true,
+                    onClick: () => handleEdit(row)
+                  },
+                  { icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) }
+                ),
+              default: () => '编辑'
+            }
           ),
           h(
-            NButton,
+            NTooltip,
+            null,
             {
-              size: 'small',
-              quaternary: true,
-              type: 'warning',
-              onClick: () => handleResetPwd(row)
-            },
-            { default: () => '重置密码' }
+              trigger: () =>
+                h(
+                  NButton,
+                  {
+                    size: 'small',
+                    quaternary: true,
+                    type: 'warning',
+                    onClick: () => handleResetPwd(row)
+                  },
+                  { icon: () => h(NIcon, null, { default: () => h(KeyOutline) }) }
+                ),
+              default: () => '重置密码'
+            }
           ),
           h(
             NPopconfirm,
@@ -365,13 +382,21 @@ const columns: DataTableColumns<UserVO> = [
             {
               trigger: () =>
                 h(
-                  NButton,
+                  NTooltip,
+                  null,
                   {
-                    size: 'small',
-                    quaternary: true,
-                    type: 'error'
-                  },
-                  { default: () => '删除' }
+                    trigger: () =>
+                      h(
+                        NButton,
+                        {
+                          size: 'small',
+                          quaternary: true,
+                          type: 'error'
+                        },
+                        { icon: () => h(NIcon, null, { default: () => h(TrashOutline) }) }
+                      ),
+                    default: () => '删除'
+                  }
                 ),
               default: () => '确认删除该用户吗？'
             }

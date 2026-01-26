@@ -127,29 +127,48 @@
 
 /* 输入框科技感定制 */
 .n-input {
-  background-color: rgba(0, 0, 0, 0.1) !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
   border-radius: 8px !important;
   border: 1px solid var(--glass-border-subtle) !important;
   transition: all 0.3s var(--transition-timing) !important;
 }
 
 .n-input:focus-within {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
   box-shadow: 0 0 15px var(--glass-accent) !important;
   border-color: var(--glass-accent) !important;
 }
 
-/* 按钮渐变美化 */
+/* 只读/禁用输入框文字颜色 */
+.n-input--disabled .n-input__input-el,
+.n-input--disabled .n-input__textarea-el {
+  color: var(--text-main) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  opacity: 0.8 !important;
+}
+
+/* 按钮样式优化 */
 .n-button--primary-type {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: #3b82f6 !important;
   border: none !important;
-  font-weight: 600 !important;
-  letter-spacing: 1px;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.n-button--primary-type:hover {
+  background: #2563eb !important;
+  border-color: transparent !important;
 }
 
 .dark .n-button--primary-type {
-  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+  background: rgba(59, 130, 246, 0.85) !important;
+}
+
+.dark .n-button--primary-type:hover {
+  background: rgba(59, 130, 246, 1) !important;
 }
 
 /* 数据表格美化 */
@@ -161,6 +180,22 @@
 
 .n-data-table-thead {
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 数据表格滚动条 */
+.n-data-table-base-table-body {
+  overflow-x: auto !important;
+}
+
+/* 固定列背景 */
+.n-data-table-td--fixed-right,
+.n-data-table-th--fixed-right {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.dark .n-data-table-td--fixed-right,
+.dark .n-data-table-th--fixed-right {
+  background: rgba(30, 41, 59, 0.95) !important;
 }
 
 /* 消息通知玻璃化 */
