@@ -106,5 +106,7 @@ export const deleteUser = (id: string): Promise<void> => {
 }
 
 export const resetPassword = (id: string, newPassword: string): Promise<void> => {
-  return request.put<any, void>(`/system/users/${id}/reset-password`, newPassword)
+  return request.put<any, void>(`/system/users/${id}/reset-password`, {
+    newPassword: newPassword,
+  })
 }

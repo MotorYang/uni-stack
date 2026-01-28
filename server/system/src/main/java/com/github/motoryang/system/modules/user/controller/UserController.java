@@ -97,16 +97,16 @@ public class UserController {
     /**
      * 重置用户密码
      *
-     * @param id          用户ID
+     * @param userId      用户ID
      * @param newPassword 新密码
      * @return 操作结果
      */
     @Operation(summary = "重置用户密码", description = "管理员重置指定用户的密码")
-    @PutMapping("/{id}/reset-password")
+    @PutMapping("/{userId}/reset-password")
     public RestResult<Void> resetPassword(
-            @Parameter(description = "用户ID", required = true) @PathVariable String id,
+            @PathVariable @Parameter(description = "用户ID", required = true) String userId,
             @RequestBody String newPassword) {
-        userService.resetPassword(id, newPassword);
+        userService.resetPassword(userId, newPassword);
         return RestResult.ok();
     }
 }
