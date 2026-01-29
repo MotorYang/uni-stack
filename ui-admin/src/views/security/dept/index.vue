@@ -412,7 +412,7 @@ import {
 import {SearchOutline, RefreshOutline, ChevronDownOutline, BusinessOutline} from '@vicons/ionicons5'
 import { getDeptTree, createDept, updateDept, deleteDept, getDeptUsers, assignUsersToDept, removeUsersFromDept, type DeptVO, type DeptCreateDTO, type DeptUpdateDTO, type DeptUserQueryDTO } from '@/api/dept'
 import { getUserPage, type UserVO, type UserQueryDTO, type PageResult } from '@/api/user'
-import { setPosition, type SetPositionDTO } from '@/api/dept'
+import { setPosition, setPrimaryDept, type SetPositionDTO } from '@/api/dept'
 import UserPicker from '@/components/UserPicker.vue'
 
 const message = useMessage()
@@ -896,9 +896,28 @@ const userColumns: DataTableColumns<UserVO> = [
   {
     title: '操作',
     key: 'actions',
-    width: 120,
+    width: 180,
     render: (row) =>
         h(NSpace, { size: 'small' }, () => [
+          h(
+              NPopconfirm,
+              {
+                onPositiveClick: () => handleSetPrimaryDept(row.id),
+              },
+              {
+                trigger: () =>
+                    h(
+                        NButton,
+                        {
+                          size: 'tiny',
+                          type: 'primary',
+                          quaternary: true,
+                        },
+                        { default: () => '设为主部门' }
+                    ),
+                default: () => '确定要将该部门设为此用户的主部门吗？',
+              }
+          ),
           h(
               NPopconfirm,
               {
@@ -998,6 +1017,16 @@ const handleRemoveUser = async (userId: string) => {
     handleSearchUsers()
   } catch (error) {
     message.error('移除失败')
+  }
+}
+
+const handleSetPrimaryDept = async (userId: string) => {
+  if (!currentDept.value) return
+  try {
+    await setPrimaryDept({ userId, deptId: currentDept.value.id })
+    message.success('设置主部门成功')
+  } catch (error) {
+    message.error('设置主部门失败')
   }
 }
 
