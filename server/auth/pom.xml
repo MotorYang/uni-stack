@@ -29,6 +29,11 @@
             <artifactId>common-redis</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-logger</artifactId>
+        </dependency>
+
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

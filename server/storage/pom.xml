@@ -102,6 +102,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- logback -->
+        <dependency>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-logger</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

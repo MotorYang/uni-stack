@@ -142,6 +142,11 @@
                 <artifactId>common-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.motoryang</groupId>
+                <artifactId>common-logger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- uuid7 -->
             <dependency>

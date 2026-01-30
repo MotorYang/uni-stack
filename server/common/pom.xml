@@ -21,6 +21,7 @@
         <module>common-mybatis</module>
         <module>common-redis</module>
         <module>common-utils</module>
+        <module>common-logger</module>
     </modules>
 </project>
 
