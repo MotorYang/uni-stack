@@ -70,4 +70,20 @@ public class TokenUtils {
         return response.writeWith(Mono.just(buffer));
     }
 
+    /**
+     * 资源未授权时返回
+     */
+    public static Mono<Void> forbidden(ServerWebExchange exchange, String message) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.FORBIDDEN);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        String body = """
+                {"code":403,"message":"%s","data":null}
+                """.formatted(message);
+
+        DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+        return response.writeWith(Mono.just(buffer));
+    }
+
 }

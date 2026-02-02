@@ -11,7 +11,7 @@ import {
   type UpdateUserInfoPayload,
   type UserInfo
 } from '@/api/auth'
-import {getUserIdFromToken} from '@/utils/jwt'
+import {getUserIdFromToken, getUsernameFromToken} from '@/utils/jwt'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'))

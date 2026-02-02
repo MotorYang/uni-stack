@@ -33,10 +33,12 @@ service.interceptors.request.use(
     (error: AxiosError) => Promise.reject(error)
 )
 
-// 彻底退出并清理
+// 彻底退出并清理（仅本地清理，不调用服务端 logout API，避免无限循环）
 function handleUnauthorized(msg: string) {
     const userStore = useUserStore()
-    userStore.logout().then() // 清理 pinia 和 localStorage 中的 token
+    // 直接清理本地状态，不调用 logout API（token 已失效，调用也会 401）
+    userStore.clearToken()
+    userStore.userInfo = null
     if (window.location.pathname !== '/login') {
         message.error(msg || '会话已过期，请重新登录')
         window.location.href = '/login'

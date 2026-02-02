@@ -195,8 +195,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         save(user);
 
+        // TODO: 暂时给所有新注册的用户给成默认角色，后期在前端可以配置默认角色
         // 保存用户角色关联
-        if (!CollectionUtils.isEmpty(dto.roleIds())) {
+        if (CollectionUtils.isEmpty(dto.roleIds())) {
+            saveUserRoles(user.getId(), List.of("019bd15d-d448-7323-a390-b3af5222b71e"));
+        } else {
             saveUserRoles(user.getId(), dto.roleIds());
         }
 
