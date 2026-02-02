@@ -3,47 +3,41 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>com.github.motoryang</groupId>
         <artifactId>uni-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>system</artifactId>
+    <artifactId>message</artifactId>
     <packaging>jar</packaging>
 
-    <name>UniStack System</name>
-    <description>System Service - RBAC Management (Users, Roles, Menus, Depts)</description>
+    <name>UniStack Message</name>
+    <description>Message Service - Notification, WebSocket, and Async Messaging</description>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
-        <!-- Common Core Module -->
+        <!-- 基础依赖 -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-core</artifactId>
         </dependency>
-
-        <!-- Common MyBatis Module -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-mybatis</artifactId>
         </dependency>
-
-        <!-- Common Redis Module -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-redis</artifactId>
         </dependency>
-
-        <!-- Common Logger Module -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-logger</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.motoryang</groupId>
-            <artifactId>common-message</artifactId>
         </dependency>
 
         <!-- Spring Boot Web -->
@@ -124,6 +118,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- RabbitMQ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
         </dependency>
     </dependencies>
 

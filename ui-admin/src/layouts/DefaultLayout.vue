@@ -126,8 +126,10 @@
           <n-popover trigger="click" placement="bottom" :width="360" class="message-popover">
             <template #trigger>
               <n-badge :value="unreadCount" :max="99" :offset="[-4, 4]" :show="unreadCount > 0">
-                <n-button circle quaternary class="header-icon-btn">
-                  <template #icon><n-icon size="20" :component="NotificationsOutline" /></template>
+                <n-button circle quaternary class="header-icon-btn ws-btn" :class="{ 'ws-connected': wsConnected }">
+                  <template #icon>
+                    <n-icon size="20" :component="NotificationsOutline" />
+                  </template>
                 </n-button>
               </n-badge>
             </template>
@@ -263,13 +265,15 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, h, type Component, watch, watchEffect, onMounted, computed } from 'vue'
+  import { ref, h, type Component, watch, watchEffect, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
-import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, NPopover, NTabs, NTabPane, NEmpty, NTag, NScrollbar, useMessage, NDivider } from 'naive-ui'
+import { NIcon, type MenuOption, type DropdownOption, NMenu, NAvatar, NInput, NButton, NBadge, NDropdown, NPopover, NTabs, NTabPane, NEmpty, NTag, NScrollbar, useMessage, useNotification, NDivider } from 'naive-ui'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
+import { useMessageStore, type Message } from '@/stores/message'
 import { getUserMenuTree, type MenuVO } from '@/api/menu'
 import { getUserIdFromToken } from '@/utils/jwt'
+import { marked } from 'marked'
 import * as Ionicons from '@vicons/ionicons5'
 import {
   Layers,
@@ -288,39 +292,24 @@ import {
 
 const themeStore = useThemeStore()
 const userStore = useUserStore()
+const messageStore = useMessageStore()
 const collapsed = ref(false)
 const message = useMessage()
+const notification = useNotification()
 const isMenuLoaded = ref(false)
 
-// 消息功能
-interface Message {
-  id: string
-  title: string
-  content: string
-  type: 'info' | 'success' | 'warning' | 'error'
-  time: string
-  read: boolean
-}
-
+// 消息功能 - 使用 messageStore
 const messageTab = ref('unread')
 
-const mockMessages: Message[] = [
-  { id: '1', title: '系统更新通知', content: '系统将于今晚 22:00 进行维护升级，预计持续 2 小时', type: 'warning', time: '5 分钟前', read: false },
-  { id: '2', title: '新用户注册', content: '用户 张三 已完成注册，请及时审核', type: 'info', time: '15 分钟前', read: false },
-  { id: '3', title: '订单支付成功', content: '订单 #20240126001 支付成功，金额 ¥1,280.00', type: 'success', time: '30 分钟前', read: false },
-  { id: '4', title: '库存预警', content: '商品「无线蓝牙耳机」库存不足 10 件，请及时补货', type: 'error', time: '1 小时前', read: true },
-  { id: '5', title: '审批通过', content: '您提交的请假申请已通过审批', type: 'success', time: '2 小时前', read: true },
-  { id: '6', title: '新评论', content: '您的文章收到了一条新评论', type: 'info', time: '3 小时前', read: true },
-  { id: '7', title: '安全提醒', content: '检测到您的账号在新设备上登录', type: 'warning', time: '昨天 18:30', read: true },
-  { id: '8', title: '任务完成', content: '定时任务「数据备份」执行成功', type: 'success', time: '昨天 12:00', read: true },
-]
+// 计算属性代理到 store
+const unreadMessages = computed(() => messageStore.unreadMessages)
+const readMessages = computed(() => messageStore.readMessages)
+const historyMessages = computed(() => messageStore.historyMessages)
+const unreadCount = computed(() => messageStore.unreadCount)
+const wsConnected = computed(() => messageStore.wsConnected)
 
-const messages = ref<Message[]>(mockMessages)
-
-const unreadMessages = computed(() => messages.value.filter(m => !m.read))
-const readMessages = computed(() => messages.value.filter(m => m.read).slice(0, 5))
-const historyMessages = computed(() => messages.value)
-const unreadCount = computed(() => unreadMessages.value.length)
+// 消息时间刷新定时器
+let timeRefreshTimer: ReturnType<typeof setInterval> | null = null
 
 function getMessageIcon(type: Message['type']) {
   const icons = {
@@ -343,22 +332,38 @@ function getMessageColor(type: Message['type']) {
 }
 
 function handleReadMessage(msg: Message) {
-  msg.read = true
+  messageStore.markAsRead(msg.id)
   message.success('已标记为已读')
 }
 
 function handleReadAll() {
-  messages.value.forEach(m => m.read = true)
+  messageStore.markAllAsRead()
   message.success('已全部标记为已读')
 }
 
 function handleDeleteMessage(msg: Message) {
-  const index = messages.value.findIndex(m => m.id === msg.id)
-  if (index > -1) {
-    messages.value.splice(index, 1)
-    message.success('已删除')
-  }
+  messageStore.deleteMessage(msg.id)
+  message.success('已删除')
 }
+
+// 监听新消息并显示桌面通知
+watch(unreadCount, (newVal, oldVal) => {
+  if (newVal > oldVal) {
+    const latestMsg = unreadMessages.value[0]
+    if (latestMsg) {
+      // 渲染 Markdown 内容
+      const htmlContent = marked.parse(latestMsg.content, { async: false }) as string
+      notification[latestMsg.type]({
+        title: latestMsg.title,
+        content: () => h('div', {
+          innerHTML: htmlContent,
+          class: 'markdown-content'
+        }),
+        duration: 5000,
+      })
+    }
+  }
+})
 
 // 同步主题到 document，让全局下拉菜单也能感知主题
 watchEffect(() => {
@@ -555,6 +560,15 @@ onMounted(async () => {
     }
   }
 
+  // 初始化 WebSocket 连接
+  await messageStore.initWebSocket()
+
+  // 每分钟刷新消息时间显示和连接状态
+  timeRefreshTimer = setInterval(() => {
+    messageStore.refreshMessageTimes()
+    messageStore.updateConnectionStatus()
+  }, 60000)
+
   // Load user menu
   const token = userStore.token
   if (!token) {
@@ -628,6 +642,15 @@ onMounted(async () => {
     console.error('Failed to load menu', error)
   } finally {
     isMenuLoaded.value = true
+  }
+})
+
+// 清理 WebSocket 和定时器
+onUnmounted(() => {
+  messageStore.disconnectWebSocket()
+  if (timeRefreshTimer) {
+    clearInterval(timeRefreshTimer)
+    timeRefreshTimer = null
   }
 })
 
@@ -841,5 +864,94 @@ html.dark .dept-option {
 .message-delete-btn:hover {
   opacity: 1 !important;
   color: #d03050 !important;
+}
+
+/* WebSocket 连接状态 */
+.ws-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: background 0.3s;
+}
+
+.ws-btn.ws-connected::after {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+/* Markdown 内容样式 */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content p {
+  margin: 0 0 0.5em;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content code {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.8em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content a {
+  color: #2080f0;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content blockquote {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+html.dark .markdown-content code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .markdown-content pre {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .markdown-content blockquote {
+  border-left-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
 }
 </style>

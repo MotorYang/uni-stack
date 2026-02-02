@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/doc.html",
-                                "/actuator/**"
+                                "/actuator/**",
+                                "/ws/**"  // WebSocket 端点
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

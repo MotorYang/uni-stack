@@ -24,11 +24,18 @@ public class TokenUtils {
 
     /**
      * 获取Token
+     * 优先从 Authorization Header 获取，其次从 URL 参数 token 获取（用于 WebSocket）
      */
     public static String getToken(ServerHttpRequest request) {
+        // 1. 优先从 Header 获取
         String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(Constants.TOKEN_PREFIX)) {
             return bearerToken.substring(Constants.TOKEN_PREFIX.length());
+        }
+        // 2. 从 URL 参数获取（用于 WebSocket 连接）
+        String queryToken = request.getQueryParams().getFirst("token");
+        if (StringUtils.hasText(queryToken)) {
+            return queryToken;
         }
         return null;
     }

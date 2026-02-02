@@ -1,0 +1,42 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: message
+
+  # JDK 21 虚拟线程优化
+  threads:
+    virtual:
+      enabled: true
+
+  cloud:
+    nacos:
+      username: uni-stack
+      password: 745700Yxy@
+      discovery:
+        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        # 服务元数据，供 Spring Boot Admin 识别
+        metadata:
+          management:
+            context-path: /actuator
+      config:
+        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        file-extension: yaml
+
+  config:
+    import:
+      - nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+      - nacos:message.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+
+# Actuator 端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

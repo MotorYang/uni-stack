@@ -19,6 +19,8 @@
         <module>gateway</module>
         <module>storage</module>
         <module>monitor</module>
+        <module>message</module>
+        <module>message</module>
     </modules>
 
     <properties>
@@ -145,6 +147,11 @@
             <dependency>
                 <groupId>com.github.motoryang</groupId>
                 <artifactId>common-logger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.motoryang</groupId>
+                <artifactId>common-message</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

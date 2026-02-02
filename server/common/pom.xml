@@ -22,6 +22,7 @@
         <module>common-redis</module>
         <module>common-utils</module>
         <module>common-logger</module>
+        <module>common-message</module>
     </modules>
 </project>
 
