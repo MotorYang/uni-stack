@@ -122,8 +122,10 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
-                    <include>banner.txt</include>
                     <include>application.yml</include>
+                    <include>application-*.yml</include>
+                    <include>banner.txt</include>
+                    <include>mapper/**/*.xml</include>
                 </includes>
             </resource>
         </resources>

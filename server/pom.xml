@@ -20,7 +20,6 @@
         <module>storage</module>
         <module>monitor</module>
         <module>message</module>
-        <module>message</module>
     </modules>
 
     <properties>
