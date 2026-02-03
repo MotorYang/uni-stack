@@ -1,6 +1,6 @@
 package com.github.motoryang.system.config;
 
-import com.github.motoryang.common.core.filter.InternalSecretFilter;
+import com.github.motoryang.common.web.filter.InternalSecretFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

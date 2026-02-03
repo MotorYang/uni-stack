@@ -1,6 +1,5 @@
 package com.github.motoryang.gateway.filter;
 
-import com.github.motoryang.common.redis.constants.RedisConstants;
 import com.github.motoryang.gateway.constants.Constants;
 import com.github.motoryang.gateway.utils.PublicResourceMatcher;
 import com.github.motoryang.gateway.utils.TokenUtils;
@@ -77,7 +76,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
             // 校验 Redis 中的 Token，并获取权限列表
             return reactiveStringRedisTemplate.opsForValue()
-                    .get(RedisConstants.REDIS_TOKEN_KEY + userId)
+                    .get(Constants.REDIS_TOKEN_KEY + userId)
                     .defaultIfEmpty("EMPTY")
                     .flatMap(redisToken -> {
                         if ("EMPTY".equals(redisToken)) {

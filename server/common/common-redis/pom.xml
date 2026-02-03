@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <name>UniStack Common Redis</name>
-    <description>Shared Redis serialization configuration</description>
+    <description>Redis configuration and serialization</description>
 
     <dependencies>
         <!-- Redis -->
@@ -23,26 +23,6 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <!-- Spring Web MVC (optional, for API Scanner) -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Swagger Annotations (optional, for API Scanner) -->
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations-jakarta</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Jackson (optional, for API Scanner JSON serialization) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <!-- NO spring-webmvc, NO swagger, NO jackson (moved to common-web) -->
     </dependencies>
 </project>
-

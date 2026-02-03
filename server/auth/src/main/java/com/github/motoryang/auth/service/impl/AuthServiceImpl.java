@@ -10,8 +10,7 @@ import com.github.motoryang.common.core.constants.Constants;
 import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.common.core.result.RestResult;
 import com.github.motoryang.common.core.result.ResultCode;
-import com.github.motoryang.common.redis.constants.RedisConstants;
-import com.github.motoryang.common.utils.JwtUtils;
+import com.github.motoryang.common.security.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,7 +92,7 @@ public class AuthServiceImpl implements IAuthService {
         // 3. 比对和Redis中的Token是否一致
         boolean isMatch = Objects.equals(
                 redisTemplate.opsForValue()
-                        .get(RedisConstants.REDIS_REFRESH_TOKEN_KEY + JwtUtils.getUserId(refreshToken, jwtSecret)),
+                        .get(Constants.REDIS_REFRESH_TOKEN_KEY + JwtUtils.getUserId(refreshToken, jwtSecret)),
                 dto.refreshToken());
         if (!isMatch) {
             throw new BusinessException(ResultCode.TOKEN_INVALID);
@@ -124,9 +123,9 @@ public class AuthServiceImpl implements IAuthService {
         // 将token、权限缓存从Redis移除
         try {
             String userId = JwtUtils.getUserId(accessToken, jwtSecret);
-            redisTemplate.delete(RedisConstants.REDIS_TOKEN_KEY + userId);
-            redisTemplate.delete(RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId);
-            redisTemplate.delete(RedisConstants.REDIS_USER_PERMS_KEY + userId);
+            redisTemplate.delete(Constants.REDIS_TOKEN_KEY + userId);
+            redisTemplate.delete(Constants.REDIS_REFRESH_TOKEN_KEY + userId);
+            redisTemplate.delete(Constants.REDIS_USER_PERMS_KEY + userId);
         } catch (Exception e) {
             log.warn("Token 已过期或无效: {}", e.getMessage());
         }
@@ -140,9 +139,9 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     private void saveTokenToRedis(String userId, TokenVO tokenVO, List<String> permissions) {
-        var tokenKey = RedisConstants.REDIS_TOKEN_KEY + userId;
-        var refreshKey = RedisConstants.REDIS_REFRESH_TOKEN_KEY + userId;
-        var permsKey = RedisConstants.REDIS_USER_PERMS_KEY + userId;
+        var tokenKey = Constants.REDIS_TOKEN_KEY + userId;
+        var refreshKey = Constants.REDIS_REFRESH_TOKEN_KEY + userId;
+        var permsKey = Constants.REDIS_USER_PERMS_KEY + userId;
 
         redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             var stringConn = (StringRedisConnection) connection;

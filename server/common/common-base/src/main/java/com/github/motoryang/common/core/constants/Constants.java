@@ -1,0 +1,51 @@
+package com.github.motoryang.common.core.constants;
+
+/**
+ * 通用常量
+ */
+public final class Constants {
+
+    private Constants() {
+    }
+
+    /**
+     * Token 前缀
+     */
+    public static final String TOKEN_PREFIX = "Bearer ";
+
+    /**
+     * 自定义请求头
+     */
+    public static final String USER_ID_HEADER = "X-User-Id";
+    public static final String USERNAME_HEADER = "X-Username";
+    public static final String USER_ROLES_HEADER = "X-User-Roles";
+    public static final String USER_PERMS_HEADER = "X-User-Perms";
+    public static final String INTERNAL_TOKEN_HEADER = "X-Internal-Token";
+
+    /**
+     * Authorization Header
+     */
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+
+    /**
+     * 状态常量
+     */
+    public static final int STATUS_NORMAL = 0;
+    public static final int STATUS_DISABLED = 1;
+
+    /**
+     * 删除标志
+     */
+    public static final int NOT_DELETED = 0;
+    public static final int DELETED = 1;
+
+    /**
+     * Redis key prefixes
+     */
+    public static final String REDIS_TOKEN_KEY = "uni:token:";
+    public static final String REDIS_REFRESH_TOKEN_KEY = "uni:refresh:";
+    public static final String REDIS_USER_KEY = "uni:user:";
+    public static final String REDIS_USER_PERMS_KEY = "uni:perms:";
+    public static final String REDIS_API_KEY = "uni:api:";
+}
+

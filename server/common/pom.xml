@@ -17,12 +17,12 @@
     <description>Spring Cloud Microservices Platform Common</description>
 
     <modules>
-        <module>common-core</module>
-        <module>common-mybatis</module>
+        <module>common-base</module>
+        <module>common-web</module>
+        <module>common-security</module>
+        <module>common-data</module>
         <module>common-redis</module>
-        <module>common-utils</module>
-        <module>common-logger</module>
-        <module>common-message</module>
+        <module>common-mq</module>
     </modules>
 </project>
 

@@ -125,12 +125,22 @@
             </dependency>
             <dependency>
                 <groupId>com.github.motoryang</groupId>
-                <artifactId>common-core</artifactId>
+                <artifactId>common-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.motoryang</groupId>
-                <artifactId>common-mybatis</artifactId>
+                <artifactId>common-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.motoryang</groupId>
+                <artifactId>common-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.motoryang</groupId>
+                <artifactId>common-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -140,17 +150,7 @@
             </dependency>
             <dependency>
                 <groupId>com.github.motoryang</groupId>
-                <artifactId>common-utils</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.motoryang</groupId>
-                <artifactId>common-logger</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.motoryang</groupId>
-                <artifactId>common-message</artifactId>
+                <artifactId>common-mq</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

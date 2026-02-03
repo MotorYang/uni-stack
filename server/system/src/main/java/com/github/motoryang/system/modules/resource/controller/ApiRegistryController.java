@@ -3,9 +3,9 @@ package com.github.motoryang.system.modules.resource.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.motoryang.common.core.constants.Constants;
 import com.github.motoryang.common.core.result.RestResult;
-import com.github.motoryang.common.redis.api.ApiInfo;
-import com.github.motoryang.common.redis.constants.RedisConstants;
+import com.github.motoryang.common.web.api.ApiInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,12 +35,12 @@ public class ApiRegistryController {
     @Operation(summary = "获取所有已注册服务名")
     @GetMapping("/services")
     public RestResult<List<String>> getServices() {
-        Set<String> keys = redisTemplate.keys(RedisConstants.REDIS_API_KEY + "*");
+        Set<String> keys = redisTemplate.keys(Constants.REDIS_API_KEY + "*");
         if (keys.isEmpty()) {
             return RestResult.ok(List.of());
         }
         List<String> services = keys.stream()
-                .map(k -> k.replace(RedisConstants.REDIS_API_KEY, ""))
+                .map(k -> k.replace(Constants.REDIS_API_KEY, ""))
                 .sorted()
                 .toList();
         return RestResult.ok(services);
@@ -51,7 +51,7 @@ public class ApiRegistryController {
     public RestResult<List<ApiInfo>> getApis(
             @Parameter(description = "服务名称", required = true)
             @RequestParam String serviceName) {
-        String key = RedisConstants.REDIS_API_KEY + serviceName;
+        String key = Constants.REDIS_API_KEY + serviceName;
         String json = redisTemplate.opsForValue().get(key);
         if (json == null || json.isEmpty()) {
             return RestResult.ok(List.of());

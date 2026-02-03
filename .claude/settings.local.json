@@ -8,7 +8,16 @@
       "Bash(mvn compile:*)",
       "Bash(git -C \"E:\\\\code\\\\java\\\\uni-stack\" status)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(java -version:*)",
+      "Bash(mvn:*)",
+      "Bash(set JAVA_HOME=D:envjdkjdk-21.0.9)",
+      "Bash(\"D:\\\\env\\\\jdk\\\\jdk-21.0.9\\\\bin\\\\java\" -version)",
+      "Bash(where:*)",
+      "Bash(\"C:/Program Files/Common Files/Oracle/Java/javapath/java\" -version)",
+      "Bash(export JAVA_HOME=\"C:/Program Files/Common Files/Oracle/Java\")",
+      "Bash(export JAVA_HOME=\"D:/env/jdk/jdk-21\")"
     ]
   }
 }

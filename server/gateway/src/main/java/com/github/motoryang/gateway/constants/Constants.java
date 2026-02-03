@@ -23,4 +23,10 @@ public class Constants {
     public static final String INTERNAL_TOKEN_HEADER = "X-Internal-Token";
 
     public static final String SKIP_SECURITY = "skipSecurity";
+
+    /**
+     * Redis key prefixes
+     */
+    public static final String REDIS_TOKEN_KEY = "uni:token:";
+    public static final String REDIS_USER_PERMS_KEY = "uni:perms:";
 }

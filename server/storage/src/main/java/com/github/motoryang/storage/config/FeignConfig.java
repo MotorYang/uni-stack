@@ -1,6 +1,6 @@
 package com.github.motoryang.storage.config;
 
-import com.github.motoryang.common.core.feign.FeignInternalRequestInterceptor;
+import com.github.motoryang.common.web.feign.FeignInternalRequestInterceptor;
 import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

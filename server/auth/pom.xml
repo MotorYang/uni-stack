@@ -17,39 +17,28 @@
     <description>Authentication Service - JWT Dual-Token Management</description>
 
     <dependencies>
-        <!-- Common Core Module -->
+        <!-- Common Web (includes base, web, validation, feign, security-core) -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
-            <artifactId>common-core</artifactId>
+            <artifactId>common-web</artifactId>
         </dependency>
 
-        <!-- Common Redis Module -->
+        <!-- Common Security (JWT utilities) -->
+        <dependency>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-security</artifactId>
+        </dependency>
+
+        <!-- Common Redis -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
             <artifactId>common-redis</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.motoryang</groupId>
-            <artifactId>common-logger</artifactId>
-        </dependency>
-
-        <!-- Spring Boot Web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- Spring Security -->
+        <!-- Spring Security (service-level configuration) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <!-- Validation -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
         <!-- Nacos Discovery -->
@@ -64,22 +53,10 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-        <!-- OpenFeign -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <!-- LoadBalancer -->
+        <!-- LoadBalancer (for Feign) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
-
-        <!-- Redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
         <!-- Lombok -->
@@ -89,7 +66,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- knife4j 内部微服务使用 -->
+        <!-- knife4j -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>

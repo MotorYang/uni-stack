@@ -17,10 +17,10 @@
     <description>Monitor Service - Spring Boot Admin Server for Microservices Monitoring</description>
 
     <dependencies>
-        <!-- Common Core Module -->
+        <!-- Common Base -->
         <dependency>
             <groupId>com.github.motoryang</groupId>
-            <artifactId>common-core</artifactId>
+            <artifactId>common-base</artifactId>
         </dependency>
 
         <!-- Spring Boot Admin Server -->
