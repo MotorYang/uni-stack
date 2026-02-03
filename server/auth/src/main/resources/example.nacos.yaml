@@ -1,0 +1,34 @@
+# Nacos中该服务的配置文件内容
+spring:
+  # OpenFeign 与 熔断配置
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+      circuitbreaker:
+        enabled: true
+
+  # Redis 配置（用于存储 Token 黑名单、验证码等）
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.42}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+# 认证核心业务配置
+auth:
+  jwt:
+    # 动态刷新 secret 可以强制所有旧 Token 失效（安全应急时使用）
+    secret: ${JWT_SECRET:UniStackSecretKeyForJwtTokenMustBeAtLeast256Bits!}
+    # Token过期时间（支持格式，ms、s、m、h、d）
+    access-token-expire: 2h
+    refresh-token-expire: 7d
+
+# 日志配置
+logging:
+  level:
+    com.github.motoryang.auth: DEBUG

@@ -1,0 +1,129 @@
+# Nacos中该服务的配置文件内容
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # MinIO 静态资源转发规则
+        - id: minio-static-route
+          uri: http://192.168.1.42:9000
+          predicates:
+            # 匹配路径，桶名是 unistack
+            - Path=/static/unistack/**
+          filters:
+            # 关键：由于 MinIO 路径不带 /static，需要剥离路径前缀
+            # 访问网关 /static/unistack/1.jpg -> 转发到 MinIO /unistack/1.jpg
+            - StripPrefix=1
+            # 清除发往 MinIO 的认证头，避免冲突
+            - RemoveRequestHeader=Authorization
+            - AddResponseHeader=Cache-Control, max-age=3600
+        # Auth 服务路由
+        - id: auth-service
+          uri: lb://my-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        # System 服务路由
+        - id: system
+          uri: lb://system
+          predicates:
+            - Path=/system/**
+          filters:
+            - StripPrefix=1
+
+        - id: system-ws
+          uri: lb://system
+          predicates:
+            - Path=/ws/**
+
+        # Storage 服务路由
+        - id: storage
+          uri: lb://storage
+          predicates:
+            - Path=/storage/**
+          filters:
+            - StripPrefix=1
+
+        # Monitor 监控中心路由
+        - id: monitor
+          uri: lb://monitor
+          predicates:
+            - Path=/monitor/**
+          filters:
+            - StripPrefix=1
+
+      whitelist:
+        - /auth/login
+        - /auth/refresh
+        - /system/v3/api-docs
+        - /auth/v3/api-docs
+        - /storage/v3/api-docs
+
+    stream:
+      bindings:
+        permSync-in-0:
+          destination: auth-sync-exchange
+      rabbit:
+        bindings:
+          permSync-in-0:
+            consumer:
+              exchange-type: topic
+              # 监听所有 perm.sync 开头的通知
+              binding-routing-key: perm.sync.*
+              # 自动删除队列，防止该网关实例停机后产生大量垃圾匿名队列
+              auto-delete-queue: true
+              # 开启虚拟线程处理消息，提升吞吐量
+              container-type: simple
+              prefetch: 20
+
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.42}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+  # RabbitMQ
+  rabbitmq:
+    host: ${RABBIT_HOST:192.168.1.42}
+    port: 5672
+    username: ${RABBIT_USER:admin}
+    password: ${RABBIT_PASSWORD:745700Yxy@}
+    virtual-host: /uni-stack
+    # 针对虚拟线程的连接池优化
+    connection-timeout: 10s
+    cache:
+      connection:
+        mode: channel
+# 业务自定义配置
+auth:
+  jwt:
+    secret: ${JWT_SECRET:UniStackSecretKeyForJwtTokenMustBeAtLeast256Bits!}
+  # 白名单路径
+  whitelist: /auth/login,/auth/refresh,/auth/captcha
+
+logging:
+  level:
+    com.github.motoryang.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+
+knife4j:
+  gateway:
+    enabled: true
+    # 策略配置：自动根据 Spring Cloud Gateway 的路由发现服务文档
+    strategy: manual
+    routes:
+      - name: 用户系统
+        url: /system/v3/api-docs
+        service-name: system-service
+      - name: 认证中心
+        url: /auth/v3/api-docs
+        service-name: auth-service
+      - name: 存储服务
+        url: /storage/v3/api-docs
+        service-name: storage-service

@@ -1,0 +1,69 @@
+# Nacos中该服务的配置文件内容
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 限制单文件大小
+      max-request-size: 50MB   # 限制单次请求总大小
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:192.168.1.42}:${DB_PORT:3306}/${DB_NAME:frame}?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:motoryang}
+    password: ${DB_PASSWORD:745700Yxy@}
+    hikari:
+      minimum-idle: 5
+      # 开启虚拟线程后，可以适当增加连接池大小以应对更高并发
+      maximum-pool-size: 50
+      auto-commit: true
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  # RabbitMQ
+  rabbitmq:
+    host: ${RABBIT_HOST:192.168.1.42}
+    port: 5672
+    username: ${RABBIT_USER:admin}
+    password: ${RABBIT_PASSWORD:745700Yxy@}
+    virtual-host: /uni-stack
+    # 针对虚拟线程的连接池优化
+    connection-timeout: 10s
+    cache:
+      connection:
+        mode: channel
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.42}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.github.motoryang.message.modules.*.entity
+
+# 日志配置
+logging:
+  level:
+    com.github.motoryang.system: DEBUG
+    com.github.motoryang.system.modules: DEBUG
+
+# Minio 存储图片等文件资源
+minio:
+  endpoint: http://192.168.1.42:9000
+  access-key: admin
+  secret-key: 745700Yxy@
+  bucket-name: unistack
+  public-domain: http://127.0.0.1:8080/static
