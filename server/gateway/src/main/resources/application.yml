@@ -4,24 +4,10 @@ server:
 spring:
   application:
     name: gateway
+  profiles:
+    active: @profile.active@
+
   # JDK 21 虚拟线程优化
   threads:
     virtual:
       enabled: true
-
-  cloud:
-    nacos:
-      username: uni-stack
-      password: 745700Yxy@
-      discovery:
-        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
-        namespace: ${NACOS_NAMESPACE:uni-stack}
-      config:
-        server-addr: ${NACOS_SERVER:192.168.1.42:8848}
-        namespace: ${NACOS_NAMESPACE:uni-stack}
-        file-extension: yaml
-
-  config:
-    import:
-      - nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
-      - nacos:gateway.yaml?group=DEFAULT_GROUP&refreshEnabled=true

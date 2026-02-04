@@ -1,0 +1,17 @@
+spring:
+  cloud:
+    nacos:
+      username: uni-stack
+      password: UniStack@2026
+      discovery:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+      config:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:uni-stack}
+        file-extension: yaml
+
+  config:
+    import:
+      - nacos:public-config.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+      - nacos:gateway.yaml?group=DEFAULT_GROUP&refreshEnabled=true
