@@ -23,6 +23,7 @@
         <module>common-data</module>
         <module>common-redis</module>
         <module>common-mq</module>
+        <module>common-job</module>
     </modules>
 </project>
 

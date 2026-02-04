@@ -47,6 +47,12 @@
             <artifactId>common-mq</artifactId>
         </dependency>
 
+        <!-- Common Job (XXL-JOB) -->
+        <dependency>
+            <groupId>com.github.motoryang</groupId>
+            <artifactId>common-job</artifactId>
+        </dependency>
+
         <!-- Spring Security (service-level configuration) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -41,6 +41,7 @@
         <knife4j.version>4.3.0</knife4j.version>
         <spring-boot-admin.version>3.3.4</spring-boot-admin.version>
         <swagger-annotations.version>2.2.22</swagger-annotations.version>
+        <xxl-job.version>3.3.2</xxl-job.version>
     </properties>
 
     <dependencyManagement>
@@ -153,6 +154,11 @@
                 <artifactId>common-mq</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.motoryang</groupId>
+                <artifactId>common-job</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- uuid7 -->
             <dependency>
@@ -197,6 +203,13 @@
                 <groupId>de.codecentric</groupId>
                 <artifactId>spring-boot-admin-starter-client</artifactId>
                 <version>${spring-boot-admin.version}</version>
+            </dependency>
+
+            <!-- Xxl-job 定时任务 -->
+            <dependency>
+                <groupId>com.xuxueli</groupId>
+                <artifactId>xxl-job-core</artifactId>
+                <version>${xxl-job.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
