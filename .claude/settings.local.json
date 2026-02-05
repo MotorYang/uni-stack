@@ -17,7 +17,10 @@
       "Bash(where:*)",
       "Bash(\"C:/Program Files/Common Files/Oracle/Java/javapath/java\" -version)",
       "Bash(export JAVA_HOME=\"C:/Program Files/Common Files/Oracle/Java\")",
-      "Bash(export JAVA_HOME=\"D:/env/jdk/jdk-21\")"
+      "Bash(export JAVA_HOME=\"D:/env/jdk/jdk-21\")",
+      "Bash(ls -la \"E:\\\\code\\\\java\\\\uni-stack\\\\ui-admin\\\\src\\\\mock\"\" 2>/dev/null || echo \"No mock directory \")",
+      "Bash(del \"E:\\\\code\\\\java\\\\uni-stack\\\\server\\\\system\\\\src\\\\main\\\\java\\\\com\\\\github\\\\motoryang\\\\system\\\\modules\\\\notice\\\\model\\\\dto\\\\NoticeDTO.java\")",
+      "Skill(mysql-database-design)"
     ]
   }
 }

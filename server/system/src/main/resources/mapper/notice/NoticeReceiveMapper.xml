@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.motoryang.system.modules.notice.mapper.NoticeReceiveMapper">
+
+    <!-- 批量插入通知接收记录 -->
+    <insert id="insertBatch">
+        INSERT INTO sys_notice_receive (id, notice_id, user_id, is_read)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.noticeId}, #{item.userId}, #{item.isRead})
+        </foreach>
+    </insert>
+
+    <!-- 根据通知ID删除接收记录 -->
+    <delete id="deleteByNoticeId">
+        DELETE FROM sys_notice_receive WHERE notice_id = #{noticeId}
+    </delete>
+
+</mapper>

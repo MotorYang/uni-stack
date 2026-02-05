@@ -244,3 +244,59 @@ CREATE TABLE sys_user_dept
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci COMMENT ='用户部门关联表';
+
+-- ============================================
+-- 11. 通知公告表
+-- ============================================
+DROP TABLE IF EXISTS sys_notice;
+CREATE TABLE sys_notice (
+    id CHAR(36) NOT NULL COMMENT '通知ID',
+    title VARCHAR(200) NOT NULL COMMENT '通知标题',
+    content TEXT DEFAULT NULL COMMENT '通知内容（富文本）',
+    type VARCHAR(20) NOT NULL COMMENT '通知类型（NOTICE通知 ANNOUNCE公告 TASK待办）',
+    priority VARCHAR(10) DEFAULT 'M' COMMENT '优先级（L低 M中 H高）',
+    status VARCHAR(20) DEFAULT 'DRAFT' COMMENT '状态（DRAFT草稿 PUBLISHED已发布 REVOKED已撤销）',
+    target VARCHAR(20) NOT NULL COMMENT '通知目标（ALL所有用户 ROLE指定角色 USER指定用户）',
+    time_option VARCHAR(20) DEFAULT 'NOW' COMMENT '发送时间选项（NOW即时 TIME定时）',
+    notice_time DATETIME(6) DEFAULT NULL COMMENT '定时发送时间',
+    create_time DATETIME(6) DEFAULT NULL COMMENT '创建时间',
+    update_time DATETIME(6) DEFAULT NULL COMMENT '更新时间',
+    create_by CHAR(36) DEFAULT NULL COMMENT '创建者',
+    update_by CHAR(36) DEFAULT NULL COMMENT '更新者',
+    deleted TINYINT DEFAULT 0 COMMENT '删除标志（0存在 1删除）',
+    PRIMARY KEY (id),
+    KEY idx_sys_notice_type (type),
+    KEY idx_sys_notice_status (status),
+    KEY idx_sys_notice_priority (priority),
+    KEY idx_sys_notice_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='通知公告表';
+
+-- ============================================
+-- 12. 通知目标表
+-- ============================================
+DROP TABLE IF EXISTS sys_notice_target;
+CREATE TABLE sys_notice_target (
+    id CHAR(36) NOT NULL COMMENT '主键ID',
+    notice_type VARCHAR(20) NOT NULL COMMENT '目标类型（ROLE角色 USER用户）',
+    notice_id CHAR(36) NOT NULL COMMENT '通知ID（关联 sys_notice.id）',
+    target_id CHAR(36) NOT NULL COMMENT '目标ID（角色ID或用户ID）',
+    PRIMARY KEY (id),
+    KEY idx_sys_notice_target_notice_id (notice_id),
+    KEY idx_sys_notice_target_target_id (target_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='通知目标表';
+
+-- ============================================
+-- 13. 通知接收状态表
+-- ============================================
+DROP TABLE IF EXISTS sys_notice_receive;
+CREATE TABLE sys_notice_receive (
+    id CHAR(36) NOT NULL COMMENT '主键ID',
+    notice_id CHAR(36) NOT NULL COMMENT '通知ID（关联 sys_notice.id）',
+    user_id CHAR(36) NOT NULL COMMENT '接收用户ID（关联 sys_user.id）',
+    is_read VARCHAR(1) DEFAULT '0' COMMENT '是否已读（0未读 1已读）',
+    read_time DATETIME(6) DEFAULT NULL COMMENT '阅读时间',
+    PRIMARY KEY (id),
+    KEY idx_sys_notice_receive_notice_id (notice_id),
+    KEY idx_sys_notice_receive_user_id (user_id),
+    KEY idx_sys_notice_receive_is_read (is_read)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='通知接收状态表';

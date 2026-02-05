@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.motoryang.system.modules.notice.mapper.NoticeTargetMapper">
+
+    <!-- 批量插入通知目标 -->
+    <insert id="insertBatch">
+        INSERT INTO sys_notice_target (id, notice_type, notice_id, target_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.noticeType}, #{item.noticeId}, #{item.targetId})
+        </foreach>
+    </insert>
+
+    <!-- 根据通知ID删除目标 -->
+    <delete id="deleteByNoticeId">
+        DELETE FROM sys_notice_target WHERE notice_id = #{noticeId}
+    </delete>
+
+    <!-- 根据通知ID查询目标列表 -->
+    <select id="selectByNoticeId" resultType="com.github.motoryang.system.modules.notice.entity.NoticeTarget">
+        SELECT id, notice_type, notice_id, target_id
+        FROM sys_notice_target
+        WHERE notice_id = #{noticeId}
+    </select>
+
+</mapper>
