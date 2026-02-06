@@ -8,6 +8,7 @@ import com.github.motoryang.common.core.exception.BusinessException;
 import com.github.motoryang.system.modules.notice.converter.NoticeConverter;
 import com.github.motoryang.system.modules.notice.entity.Notice;
 import com.github.motoryang.system.modules.notice.entity.NoticeTarget;
+import com.github.motoryang.system.modules.notice.handler.NoticeHandler;
 import com.github.motoryang.system.modules.notice.mapper.NoticeMapper;
 import com.github.motoryang.system.modules.notice.mapper.NoticeReceiveMapper;
 import com.github.motoryang.system.modules.notice.mapper.NoticeTargetMapper;
@@ -37,6 +38,7 @@ public class NoticeServiceImpl extends ServiceImpl<NoticeMapper, Notice> impleme
     private final NoticeConverter noticeConverter;
     private final NoticeTargetMapper noticeTargetMapper;
     private final NoticeReceiveMapper noticeReceiveMapper;
+    private final NoticeHandler noticeHandler;
 
     @Override
     public IPage<NoticeVO> pageQuery(NoticeQueryDTO dto) {
@@ -165,6 +167,8 @@ public class NoticeServiceImpl extends ServiceImpl<NoticeMapper, Notice> impleme
 
         notice.setStatus("PUBLISHED");
         updateById(notice);
+
+        noticeHandler.publishNotice(notice);
     }
 
     @Override
