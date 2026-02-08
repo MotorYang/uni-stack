@@ -72,12 +72,12 @@ const model = ref({
 const rules = {
   username: {
     required: true,
-    message: 'Please enter your username',
+    message: '请输入用户名',
     trigger: ['blur', 'input']
   },
   password: {
     required: true,
-    message: 'Please enter your password',
+    message: '请输入密码！',
     trigger: ['blur', 'input']
   }
 }
@@ -89,10 +89,10 @@ function handleLogin(e: MouseEvent) {
       loading.value = true
       try {
         await userStore.login(model.value)
-        message.success('Login successful')
+        message.success('登录成功！')
         router.push('/')
       } catch (error) {
-        message.error('Login failed')
+        message.error('登录失败！')
       } finally {
         loading.value = false
       }
