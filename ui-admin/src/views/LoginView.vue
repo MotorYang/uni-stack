@@ -1,42 +1,43 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 login-container">
-    <n-card style="max-width: 420px; width: 100%" class="glass-card" title="用户登录">
+    <n-card style="max-width: 420px; width: 100%" class="glass-card" title="Uni Stack">
       <n-form
-        ref="formRef"
-        :model="model"
-        :rules="rules"
-        size="large"
+          ref="formRef"
+          :model="model"
+          :rules="rules"
+          size="large"
       >
         <n-form-item path="username" label="账号">
-          <n-input 
-            v-model:value="model.username" 
-            placeholder="请输入账号"
+          <n-input
+              v-model:value="model.username"
+              placeholder="请输入账号"
           >
             <template #prefix>
-              <n-icon :component="PersonOutline" />
+              <n-icon :component="PersonOutline"/>
             </template>
           </n-input>
         </n-form-item>
-        
+
         <n-form-item path="password" label="密码">
           <n-input
-            v-model:value="model.password"
-            type="password"
-            show-password-on="click"
-            placeholder="请输入密码"
+              v-model:value="model.password"
+              type="password"
+              show-password-on="click"
+              placeholder="请输入密码"
           >
             <template #prefix>
-              <n-icon :component="LockClosedOutline" />
+              <n-icon :component="LockClosedOutline"/>
             </template>
           </n-input>
         </n-form-item>
-        
-        <div class="flex justify-between items-center mb-6">
-          <n-checkbox v-model:checked="model.rememberMe">记住我</n-checkbox>
-          <a href="#" class="text-sm">忘记密码?</a>
-        </div>
 
-        <n-button type="primary" text-color="white" block size="large" class="mb-4" @click="handleLogin" :loading="loading">
+        <!--        <div class="flex justify-between items-center mb-6">-->
+        <!--          <n-checkbox v-model:checked="model.rememberMe">记住我</n-checkbox>-->
+        <!--          <a href="#" class="text-sm">忘记密码?</a>-->
+        <!--        </div>-->
+
+        <n-button type="primary" text-color="white" block size="large" class="mb-4" @click="handleLogin"
+                  :loading="loading">
           登录
         </n-button>
       </n-form>
@@ -45,17 +46,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { 
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {
   NForm, NFormItem, NInput, NButton, NCheckbox, NIcon, NCard, useMessage,
   type FormInst
 } from 'naive-ui'
-import { 
-  PersonOutline, 
+import {
+  PersonOutline,
   LockClosedOutline
 } from '@vicons/ionicons5'
-import { useUserStore } from '@/stores/user'
+import {useUserStore} from '@/stores/user'
 
 const router = useRouter()
 const message = useMessage()
@@ -106,12 +107,11 @@ function handleLogin(e: MouseEvent) {
 .login-container {
   background-color: #0a0f1d;
   /* 组合多个背景层：光晕渐变 + 细网格 + 粗网格 */
-  background-image: 
-    radial-gradient(circle at 50% 50%, rgba(18, 52, 86, 1) 0%, transparent 80%),
-    linear-gradient(rgba(18, 107, 206, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18, 107, 206, 0.1) 1px, transparent 1px),
-    linear-gradient(rgba(18, 107, 206, 0.05) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(18, 107, 206, 0.05) 2px, transparent 2px);
+  background-image: radial-gradient(circle at 50% 50%, rgba(18, 52, 86, 1) 0%, transparent 80%),
+  linear-gradient(rgba(18, 107, 206, 0.1) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(18, 107, 206, 0.1) 1px, transparent 1px),
+  linear-gradient(rgba(18, 107, 206, 0.05) 2px, transparent 2px),
+  linear-gradient(90deg, rgba(18, 107, 206, 0.05) 2px, transparent 2px);
   background-size: 100% 100%, 20px 20px, 20px 20px, 100px 100px, 100px 100px;
   background-attachment: fixed;
   position: relative;
@@ -122,7 +122,10 @@ function handleLogin(e: MouseEvent) {
 .login-container::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(0, 221, 255, 0.08) 0%, transparent 30%);
   pointer-events: none;
 }
