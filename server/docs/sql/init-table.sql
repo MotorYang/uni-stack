@@ -4,9 +4,18 @@
 -- 字符集: utf8mb4
 -- ============================================
 
--- 创建数据库 (如果需要)
--- CREATE DATABASE IF NOT EXISTS uni_stack DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
--- USE uni_stack;
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS `frame` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 创建用户（指定身份验证插件以确保兼容性）
+CREATE USER 'motoryang'@'%' IDENTIFIED WITH caching_sha2_password BY 'Unistack@2026#123';
+
+-- 授予对 'frame' 数据库的完全控制权
+GRANT ALL PRIVILEGES ON `frame`.* TO 'motoryang'@'%';
+
+-- 刷新权限使配置立即生效
+FLUSH PRIVILEGES;
+USE uni_stack;
 
 -- ============================================
 -- 1. 部门表
